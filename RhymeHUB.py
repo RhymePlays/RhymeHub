@@ -59,7 +59,8 @@ def Hub():
 	#Variables
 	TITLEFG="#212121"
 	TITLEBG="#28A6FF"
-	Version=0.4
+	Version=0.5
+	SupportedMediaVersion=[0.3, 0.4, 0.5]
 
 	#Window Config
 	root.title('RhymePlays Hub')
@@ -187,7 +188,7 @@ def Hub():
 		with open(MediaVer,"r") as f:
 			FloatMediaVer=float(f.read())
 	
-		if FloatMediaVer==float(Version):
+		if FloatMediaVer in SupportedMediaVersion:
 			import getpass,shutil,os
 			dest=r"C:/Users/%s/AppData/Roaming/CacheMovieRP.mp4" %(getpass.getuser())
 			shutil.copy(CacheFile, dest)
@@ -439,13 +440,106 @@ def Hub():
 			#Mainloop
 			Clock.mainloop()
 
+		def Temp():
+			from tkinter import Label, Button, FLAT, E, W, N, S
+			from tkinter.ttk import Entry
+			import tkinter as tk
+
+			#Tk_Start
+			Temp=tk.Tk()
+
+			#Window_Config
+			Temp.title('RhymePlays Calculator')
+			###Temp.geometry("100x100")
+			Temp.resizable(False, False)
+			Temp.configure(bg=BG_Color)
+
+			#Function
+			def CtoF():
+				C=CTOF.get()
+				ANS=((float(C)* 9/5)+32)
+				CTOFLabel["text"]=str(ANS)+"° Degree Fahrenheit"#" ডিগ্রী ফাহরিনহেইট"
+
+			def FtoC():
+				F=FTOC.get()
+				ANS=((float(F)-32)*5/9)
+				FTOCLabel["text"]=str(ANS)+"° Degree Celsius"#" ডিগ্রী সেলসিয়াস"
+
+
+			#Elements
+			FTOC=Entry(Temp, font=(50))
+			FTOCButton=Button(Temp, text="Fahrenheit To Celsius", bg=BG_Color, fg=TEXTCOLOR, relief=FLAT, bd=0, activebackground=TEXTCOLOR, activeforeground=BG_Color, command=FtoC, font=(50))
+			FTOCLabel=Label(Temp, text="= 0 Degree Celsius", bg=BG_Color, fg=TEXTCOLOR, font=(50))
+
+			CTOF=Entry(Temp, font=(50))
+			CTOFButton=Button(Temp, text="Celsius To Fahrenheit", bg=BG_Color, fg=TEXTCOLOR, relief=FLAT, bd=0, activebackground=TEXTCOLOR, activeforeground=BG_Color, command=CtoF, font=(50))
+			CTOFLabel=Label(Temp, text="= 0 Degree Fahrenheit", bg=BG_Color, fg=TEXTCOLOR, font=(50))
+
+			CreditPadder=Label(Temp, bg=BG_Color, fg=TEXTCOLOR).grid(row=2, column=0, columnspan=3, sticky=E+W+N+S)
+			Credit=Label(Temp, text="Calculator made by Isfar Tousif Rhyme.", bg=BG_Color, fg=TEXTCOLOR)
+
+			#Grid
+			FTOC.grid(row=0, column=0)
+			FTOCButton.grid(row=0, column=1)
+			FTOCLabel.grid(row=0, column=2)
+
+			CTOF.grid(row=1, column=0)
+			CTOFButton.grid(row=1, column=1)
+			CTOFLabel.grid(row=1, column=2)
+
+			Credit.grid(row=3, column=0, columnspan=3, sticky=E+W+N+S)
+
+			#Mainloop
+			Temp.mainloop()
+
+		def QR_GENERATOR():
+			import qrcode, getpass, os
+			from tkinter import Label, Button, N,E,W,S, FLAT
+			from tkinter.ttk import Entry
+			import tkinter as tk
+
+			#Variables
+			LOC=r"C:/Users/%s/Desktop/RP_QR.png" %(getpass.getuser())
+
+			#Tk_Start
+			QRWIN=tk.Tk()
+
+			#Window Config
+			QRWIN.resizable(False, False)
+			QRWIN.configure(bg=BG_Color)
+			QRWIN.title("RhymePlays QR Generator")
+
+			#Functions
+			def GEN():
+				TEXT=str(Entry.get())
+				QR=qrcode.make(TEXT)
+				QR.save(LOC)
+				os.system(LOC)
+
+			#Elements
+			Name=Label(QRWIN, text="RhymePlays QR Code Generator.", bg=BG_Color, fg=TEXTCOLOR, font="Arial 20")
+			Entry=Entry(QRWIN, font=("10"))
+			Generate=Button(QRWIN, text="Generate!", bg=BG_Color, fg=TEXTCOLOR, font=(20), command=GEN, relief=FLAT, bd=0, activebackground=TEXTCOLOR, activeforeground=BG_Color)
+
+			#Grid
+			Name.grid(row=0, column=0, columnspan=2)
+			Entry.grid(row=1, column=0, sticky=N+S+E+W)
+			Generate.grid(row=1, column=1, sticky=N+S+E+W)
+
+			#Mainloop
+			QRWIN.mainloop()
+
 		#Elements
 		Settings=tk.Button(MoreWin, text="Settings", relief="flat", bd=0, background="#6400FF", activebackground=TEXTCOLOR, foreground=TEXTCOLOR, activeforeground=BG_Color, width=20, command=SettingsMenu)
 		FartButton=tk.Button(MoreWin, text="Clock", relief="flat", bd=0, background="#9700FF", activebackground=TEXTCOLOR, foreground=TEXTCOLOR, activeforeground=BG_Color, width=20, command=Clock)
+		TempButton=tk.Button(MoreWin, text="Temp Convert", relief="flat", bd=0, background="#9700FF", activebackground=TEXTCOLOR, foreground=TEXTCOLOR, activeforeground=BG_Color, width=20, command=Temp)
+		QRButton=tk.Button(MoreWin, text="QR Code Gen", relief="flat", bd=0, background="#6400FF", activebackground=TEXTCOLOR, foreground=TEXTCOLOR, activeforeground=BG_Color, width=20, command=QR_GENERATOR)
 
 		#Grids
 		Settings.grid(column=0, row=0, ipady=50, sticky=E+W+N+S)
 		FartButton.grid(column=1, row=0, ipady=50, sticky=E+W+N+S)
+		TempButton.grid(column=0, row=1, ipady=50, sticky=E+W+N+S)
+		QRButton.grid(column=1, row=1, ipady=50, sticky=E+W+N+S)
 
 		#Mainloop
 		MoreWin.mainloop()
