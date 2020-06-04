@@ -59,8 +59,8 @@ def Hub():
 	#Variables
 	TITLEFG="#212121"
 	TITLEBG="#28A6FF"
-	Version=0.5
-	SupportedMediaVersion=[0.3, 0.4, 0.5]
+	Version=0.6
+	SupportedMediaVersion=[0.3, 0.4, 0.5, 0.6]
 
 	#Window Config
 	root.title('RhymePlays Hub')
@@ -409,13 +409,13 @@ def Hub():
 			ColorSave=Button(SettWin, text="Save", command=UpdateColor)
 
 			#Grid
-			BGColorLab.grid(column=0, row=0)
-			BGColorEnt.grid(column=1, row=0)
+			BGColorLab.grid(column=0, row=0, pady=5, padx=5)
+			BGColorEnt.grid(column=1, row=0, pady=5, padx=5)
 
-			FGColorLab.grid(column=0, row=1)
-			FGColorEnt.grid(column=1, row=1)
+			FGColorLab.grid(column=0, row=1, pady=5, padx=5)
+			FGColorEnt.grid(column=1, row=1, pady=5, padx=5)
 
-			ColorSave.grid(column=0, row=2, columnspan=2)
+			ColorSave.grid(column=0, row=2, columnspan=2, pady=5)
 
 			#Mainloop
 			SettWin.mainloop()
@@ -430,6 +430,10 @@ def Hub():
 			Clock.title('More...')
 			Clock.resizable(False, False)
 			Clock.configure(bg=BG_Color)
+			try:
+				Clock.iconbitmap(r'Data/HubIcon.ico')
+			except:
+				pass
 			
 			#Elements
 			Time=Label(Clock, text=time.strftime("%H:%M"), bg=BG_Color, fg=TEXTCOLOR, font="Arial 40")
@@ -453,6 +457,10 @@ def Hub():
 			###Temp.geometry("100x100")
 			Temp.resizable(False, False)
 			Temp.configure(bg=BG_Color)
+			try:
+				Temp.iconbitmap(r'Data/HubIcon.ico')
+			except:
+				pass
 
 			#Function
 			def CtoF():
@@ -508,6 +516,10 @@ def Hub():
 			QRWIN.resizable(False, False)
 			QRWIN.configure(bg=BG_Color)
 			QRWIN.title("RhymePlays QR Generator")
+			try:
+				QRWIN.iconbitmap(r'Data/HubIcon.ico')
+			except:
+				pass
 
 			#Functions
 			def GEN():
@@ -522,24 +534,98 @@ def Hub():
 			Generate=Button(QRWIN, text="Generate!", bg=BG_Color, fg=TEXTCOLOR, font=(20), command=GEN, relief=FLAT, bd=0, activebackground=TEXTCOLOR, activeforeground=BG_Color)
 
 			#Grid
-			Name.grid(row=0, column=0, columnspan=2)
-			Entry.grid(row=1, column=0, sticky=N+S+E+W)
-			Generate.grid(row=1, column=1, sticky=N+S+E+W)
+			Name.grid(row=0, column=0, columnspan=2, pady=5, padx=5)
+			Entry.grid(row=1, column=0, sticky=N+S+E+W, padx=5, pady=5)
+			Generate.grid(row=1, column=1, sticky=N+S+E+W, padx=5, pady=5)
 
 			#Mainloop
 			QRWIN.mainloop()
+		
+		def EncryptMP4():
+			import zipfile, shutil, getpass, os
+			FileLoc= filedialog.askopenfilename(initialdir='/', title='Select File', filetypes=(('MP4','*.MP4'), ('Rhyme Media File','*.rmf02')))
+			shutil.copy(FileLoc, "RpMovieEncrypt.rpmovenc")
+			with open("MediaVersion", "w") as f:
+				f.write(str(Version))
+			
+			with zipfile.ZipFile("Movie.rplmov", "w") as zip:
+				zip.write("RpMovieEncrypt.rpmovenc")
+				zip.write("MediaVersion")
+				
+			os.remove("MediaVersion")
+			os.remove("RpMovieEncrypt.rpmovenc")
+
+		def CreateFile():
+			import getpass, os
+			from tkinter.ttk import Entry
+			import tkinter as tk
+		
+			#TK
+			CFILE=tk.Tk()
+			
+			#Variable
+			LOC=r"C:/Users/%s/Desktop" %(getpass.getuser())
+			
+			#Window_Config
+			CFILE.resizable(False, False)
+			CFILE.configure(bg=BG_Color)
+			CFILE.title("Create File")
+			try:
+				CFILE.iconbitmap(r'Data/HubIcon.ico')
+			except:
+				pass
+			
+			#Function
+			def CreFile():
+				Extention=str(Ext.get())
+				with open(LOC+"/New_RP_File."+Extention, "w") as f:
+					pass
+			
+			#Elements
+			Ext=Entry(CFILE)
+			Make=tk.Button(CFILE, text="Create", bg=BG_Color, fg=TEXTCOLOR, bd=0, command=CreFile)
+			
+			#Grids
+			Ext.grid(row=0, column=0, pady=5, padx=5)
+			Make.grid(row=0, column=1, pady=5, padx=5)
+		
+			#Mainloop
+			CFILE.mainloop()
+		
+		def ColorChooser():
+			from tkinter import colorchooser, messagebox
+			choosencolor=colorchooser.askcolor()
+			messagebox.showinfo("RhymeHUB","Your Choosen Color is -> '"+str(choosencolor[1])+"'")
+
+		def YT():
+			import webbrowser
+			webbrowser.open('http://bit.ly/IsfarTousifYT')
+		
+		def IG():
+			import webbrowser
+			webbrowser.open('https://www.instagram.com/isfar_tousif_')
 
 		#Elements
 		Settings=tk.Button(MoreWin, text="Settings", relief="flat", bd=0, background="#6400FF", activebackground=TEXTCOLOR, foreground=TEXTCOLOR, activeforeground=BG_Color, width=20, command=SettingsMenu)
 		FartButton=tk.Button(MoreWin, text="Clock", relief="flat", bd=0, background="#9700FF", activebackground=TEXTCOLOR, foreground=TEXTCOLOR, activeforeground=BG_Color, width=20, command=Clock)
 		TempButton=tk.Button(MoreWin, text="Temp Convert", relief="flat", bd=0, background="#9700FF", activebackground=TEXTCOLOR, foreground=TEXTCOLOR, activeforeground=BG_Color, width=20, command=Temp)
 		QRButton=tk.Button(MoreWin, text="QR Code Gen", relief="flat", bd=0, background="#6400FF", activebackground=TEXTCOLOR, foreground=TEXTCOLOR, activeforeground=BG_Color, width=20, command=QR_GENERATOR)
+		EncMovie=tk.Button(MoreWin, text="Encrypt MP4", relief="flat", bd=0, background="#6400FF", activebackground=TEXTCOLOR, foreground=TEXTCOLOR, activeforeground=BG_Color, width=20, command=EncryptMP4)
+		FileGen=tk.Button(MoreWin, text="Create New File", relief="flat", bd=0, background="#9700FF", activebackground=TEXTCOLOR, foreground=TEXTCOLOR, activeforeground=BG_Color, width=20, command=CreateFile)
+		Colorchooser=tk.Button(MoreWin, text="Choose Color", relief="flat", bd=0, background="#6400FF", activebackground=TEXTCOLOR, foreground=TEXTCOLOR, activeforeground=BG_Color, width=20, command=ColorChooser)
+		Yt=tk.Button(MoreWin, text="Youtube", relief="flat", bd=0, background="#9700FF", activebackground=TEXTCOLOR, foreground=TEXTCOLOR, activeforeground=BG_Color, width=20, command=YT)
+		Ig=tk.Button(MoreWin, text="Instagram", relief="flat", bd=0, background="#6400FF", activebackground=TEXTCOLOR, foreground=TEXTCOLOR, activeforeground=BG_Color, width=20, command=IG)
 
 		#Grids
 		Settings.grid(column=0, row=0, ipady=50, sticky=E+W+N+S)
 		FartButton.grid(column=1, row=0, ipady=50, sticky=E+W+N+S)
 		TempButton.grid(column=0, row=1, ipady=50, sticky=E+W+N+S)
 		QRButton.grid(column=1, row=1, ipady=50, sticky=E+W+N+S)
+		EncMovie.grid(column=0, row=2, ipady=50, sticky=E+W+N+S)
+		FileGen.grid(column=1, row=2, ipady=50, sticky=E+W+N+S)
+		Colorchooser.grid(column=2, row=0, ipady=50, sticky=E+W+N+S)
+		Yt.grid(column=2, row=1, ipady=50, sticky=E+W+N+S)
+		Ig.grid(column=2, row=2, ipady=50, sticky=E+W+N+S)
 
 		#Mainloop
 		MoreWin.mainloop()
