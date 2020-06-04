@@ -28,19 +28,38 @@ def Delete_Files():
 Delete_Files()
 
 def Hub():
-	from tkinter import Label, N, S, E, W, filedialog
+	from tkinter import Label, N, S, E, W, filedialog, PhotoImage
 	from tkinter.ttk import Button, Entry
 	import tkinter as tk
 
 	#Tk_Start
 	root=tk.Tk()
 
+	#Pre_Function
+	try:
+		with open("Data/BG_Color.rpsettings","r") as f:
+			BG_Color=f.read()
+			Label(root, text="Test", background=BG_Color, foreground="White")
+	except:
+		with open("Data/BG_Color.rpsettings","w") as f:
+			f.write("#0e0e0e")
+		with open("Data/BG_Color.rpsettings","r") as f:
+			BG_Color=f.read()
+
+	try:
+		with open("Data/FG_Color.rpsettings","r") as f:
+			TEXTCOLOR=f.read()
+			Label(root, text="Test", background=BG_Color, foreground=TEXTCOLOR)
+	except:
+		with open("Data/FG_Color.rpsettings","w") as f:
+			f.write("White")
+		with open("Data/FG_Color.rpsettings","r") as f:
+			TEXTCOLOR=f.read()
+
 	#Variables
-	BG_Color="#0e0e0e"
-	TEXTCOLOR="#ffffff"
 	TITLEFG="#212121"
 	TITLEBG="#28A6FF"
-	Version=0.2	
+	Version=0.4
 
 	#Window Config
 	root.title('RhymePlays Hub')
@@ -156,12 +175,32 @@ def Hub():
 			pass
 	
 	def Movie():
-		FileLoc=filedialog.askopenfilename(initialdir='/', title='Select File', filetypes=(('RhymePlays Movie','*.rpmovie'), ('Rhyme Media File','*.rmf02')))
-		
-		import getpass,shutil,os
-		dest=r"C:/Users/%s/AppData/Roaming/CacheMovieRP.mp4" %(getpass.getuser())
-		shutil.copy(FileLoc, dest)
-		os.system(dest)
+		import zipfile
+
+		FileLoc= filedialog.askopenfilename(initialdir='/', title='Select File', filetypes=(('RhymePlays Movie','*.rpmovie'), ('Rhyme Media File','*.rmf02')))
+		with zipfile.ZipFile(FileLoc, 'r') as EncryptedFile:
+			EncryptedFile.extractall("Data")
+
+		CacheFile="Data/RpMovieEncrypt.rpmovenc"
+		MediaVer="Data/MediaVersion"
+
+		with open(MediaVer,"r") as f:
+			FloatMediaVer=float(f.read())
+	
+		if FloatMediaVer==float(Version):
+			import getpass,shutil,os
+			dest=r"C:/Users/%s/AppData/Roaming/CacheMovieRP.mp4" %(getpass.getuser())
+			shutil.copy(CacheFile, dest)
+			os.remove(CacheFile)
+			os.remove(MediaVer)
+			os.system(dest)
+		else:
+			import os
+			os.remove(CacheFile)
+			os.remove(MediaVer)
+
+			from tkinter import messagebox
+			messagebox.showinfo("Non Supported Version", "You Are Attempting to Play RhymeHUB '"+str(FloatMediaVer)+"' Media on RhymeHUB Ver '"+str(Version)+"'. Which is Unsupported.")
 	
 	def Music():
 		from tkinter import E, W, N, S, CENTER, FLAT, SUNKEN
@@ -323,6 +362,94 @@ def Hub():
 		with open("Data/Request","w") as f:
 			f.write(RequestedList.get())
 
+	def moreWindow():
+		#Tk Start
+		MoreWin=tk.Tk()
+
+		#Window Config
+		MoreWin.title('More...')
+		MoreWin.resizable(False, False)
+		MoreWin.configure(bg=BG_Color)
+		try:
+			MoreWin.iconbitmap(r'Data/HubIcon.ico')
+		except:
+			pass
+		
+		#Functions
+		def SettingsMenu():
+			#Tk Start
+			SettWin=tk.Tk()
+
+			#Window Config
+			SettWin.title('Settings')
+			SettWin.resizable(False, False)
+			SettWin.configure(bg=BG_Color)
+			try:
+				SettWin.iconbitmap(r'Data/HubIcon.ico')
+			except:
+				pass
+			
+			#Function
+			def UpdateColor():
+				with open("Data/BG_Color.rpsettings","w") as f:
+					f.write(BGColorEnt.get())
+				with open("Data/FG_Color.rpsettings","w") as f:
+					f.write(FGColorEnt.get())
+				from tkinter import messagebox
+				messagebox.showinfo("RhymeHUB","Changes Will Take Effect the Next Time you Open RhymeHUB")
+
+			#Elements
+			BGColorLab=Label(SettWin, text="Change Color", background=BG_Color, foreground=TEXTCOLOR)
+			BGColorEnt=Entry(SettWin)
+
+			FGColorLab=Label(SettWin, text="Change Text Color", background=BG_Color, foreground=TEXTCOLOR)
+			FGColorEnt=Entry(SettWin)
+
+			ColorSave=Button(SettWin, text="Save", command=UpdateColor)
+
+			#Grid
+			BGColorLab.grid(column=0, row=0)
+			BGColorEnt.grid(column=1, row=0)
+
+			FGColorLab.grid(column=0, row=1)
+			FGColorEnt.grid(column=1, row=1)
+
+			ColorSave.grid(column=0, row=2, columnspan=2)
+
+			#Mainloop
+			SettWin.mainloop()
+
+		def Clock():
+			import time
+			
+			#TK Start
+			Clock=tk.Tk()
+			
+			#Window Config
+			Clock.title('More...')
+			Clock.resizable(False, False)
+			Clock.configure(bg=BG_Color)
+			
+			#Elements
+			Time=Label(Clock, text=time.strftime("%H:%M"), bg=BG_Color, fg=TEXTCOLOR, font="Arial 40")
+
+			#Grid
+			Time.grid(column=0, row=0)
+
+			#Mainloop
+			Clock.mainloop()
+
+		#Elements
+		Settings=tk.Button(MoreWin, text="Settings", relief="flat", bd=0, background="#6400FF", activebackground=TEXTCOLOR, foreground=TEXTCOLOR, activeforeground=BG_Color, width=20, command=SettingsMenu)
+		FartButton=tk.Button(MoreWin, text="Clock", relief="flat", bd=0, background="#9700FF", activebackground=TEXTCOLOR, foreground=TEXTCOLOR, activeforeground=BG_Color, width=20, command=Clock)
+
+		#Grids
+		Settings.grid(column=0, row=0, ipady=50, sticky=E+W+N+S)
+		FartButton.grid(column=1, row=0, ipady=50, sticky=E+W+N+S)
+
+		#Mainloop
+		MoreWin.mainloop()
+
 	#Elements
 	Title=Label(root, text="  Welcome to RhymeHUB", width=20, font="Arial 20", anchor="w", fg=TITLEFG, bg=TITLEBG)
 	TitleName=Label(root, text=GlobalUname, width=23, font="Arial 20", anchor="e", fg=TITLEFG, bg=TITLEBG)
@@ -337,8 +464,8 @@ def Hub():
 	RequestedList=Entry(root)
 	RequestSubmit=Button(root, text="Submit List", command=MakeReqList)
 
-	Credit=Label(root, text="Developed by Isfar Tousif Rhyme.", anchor="w", bg="#000000", fg=TEXTCOLOR)
-	Ver=Label(root, text="RhymeHUB V"+str(Version), anchor="e", bg="#000000", fg=TEXTCOLOR)
+	Credit=Label(root, text="Developed by Isfar Tousif Rhyme.  "+"  RhymeHUB V"+str(Version), anchor="w", bg=BG_Color, fg=TEXTCOLOR)
+	More=tk.Button(root ,text="More...", relief="flat", bd=0, activebackground=TEXTCOLOR, background=BG_Color, foreground=TEXTCOLOR, activeforeground=BG_Color, command=moreWindow)
 
 	#Grids
 	Title.grid(row=0, column=0, sticky=W, ipady=5)
@@ -354,8 +481,8 @@ def Hub():
 	RequestedList.grid(row=5, column=0, columnspan=2, sticky=E+W+N+S, padx=5, ipady=50)
 	RequestSubmit.grid(row=6, column=0, columnspan=2, sticky=E+W+N+S, padx=5, ipady=10)
 
-	Credit.grid(row=7, column=0, sticky=E+W+N+S, pady=5, ipady=10)
-	Ver.grid(row=7, column=1, sticky=E+W+N+S, pady=5, ipady=10)
+	Credit.grid(row=7, column=0, sticky=E+W+N+S, pady=5, ipady=5)
+	More.grid(row=7, column=1, sticky=E+W+N+S, pady=5, padx=5, ipady=5)
 
 	#Mainloop
 	root.mainloop()
@@ -404,6 +531,7 @@ def Login():
 			if UNAME=="Rhyme" and PWORD=="Admin":GRANTED()
 			elif UNAME=="Ryan" and PWORD=="Admin2":GRANTED()
 			elif UNAME=="Jihad" and PWORD=="Jihad1234":GRANTED()
+			elif UNAME=="Shuvo" and PWORD=="ShuvoPass":GRANTED()
 			else:
 				Style().configure('TButton', background="red", foreground="Black")
 		else:
