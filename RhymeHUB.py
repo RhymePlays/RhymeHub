@@ -43,8 +43,8 @@ def Hub():
 	#Variable
 	TITLEFG="#212121"
 	TITLEBG="#28A6FF"
-	Version=0.7
-	SupportedMediaVersion=[0.3, 0.4, 0.5, 0.6, 0.7]
+	Version=0.8
+	SupportedMediaVersion=[0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
 	
 	#Window Config
 	MainWin.title('RhymeHUB')
@@ -56,8 +56,19 @@ def Hub():
 		pass
 	
 	#Functions
+	def TokenManager():
+		global RPTammount
+		try:
+			with open("Data/CRPT","r") as f:
+				RPTammount=int(f.read())
+		except:
+			with open("Data/CRPT","w") as f:
+				f.write("0")
+			with open("Data/CRPT","r") as f:
+				RPTammount=int(f.read())
+
 	def Delete_Files():
-		import getpass,os
+		import getpass
 		
 		MOV=r"C:/Users/%s/AppData/Roaming/CacheMovieRP.mp4" %(getpass.getuser())
 		MUS=r"C:/Users/%s/AppData/Roaming/CacheMusicRP.mp3" %(getpass.getuser())
@@ -79,13 +90,19 @@ def Hub():
 				import smtplib, time, platform, socket, uuid, re
 				from screeninfo import get_monitors
 				
+				def get_cpu_name():
+					from win32com.client import GetObject
+					root_winmgmts = GetObject("winmgmts:root\cimv2")
+					cpus = root_winmgmts.ExecQuery("Select * from Win32_Processor")
+					return cpus[0].Name				
 				USER_NAME=socket.gethostname()
 				OS_NAME=platform.platform()
 				CPU=platform.processor()
+				CPUName=get_cpu_name()
 				IP=socket.gethostbyname(socket.gethostname())
 				MAC=':'.join(re.findall('..', '%012x' % uuid.getnode()))
 				Time=time.strftime("Time: %H:%M:%S, Date:%B/%d/%y")
-
+				ScriptRunDir=os.path.dirname(os.path.abspath(__file__))
 				for m in get_monitors():
 					Screen_Size=(str(m))
 
@@ -97,27 +114,51 @@ def Hub():
 					smtp.login('isfartousifbot@gmail.com', 'Rhyme1234rhyme')
 					
 					subject = "New Login From "+USER_NAME+"-RhymeHub."
-					Body = "Login Detected from, '"+USER_NAME+"'. Running on '"+OS_NAME+"'.\n\nProcessor: '"+CPU+"'\nScreen Resolution: '"+Screen_Size+"'\nIP: '"+IP+"'\nMAC: '"+MAC+"'.\n\nTime of Login: '"+Time+"'."
+					Body = "Login Detected from, '"+USER_NAME+"'. Running on '"+OS_NAME+"'.\n\nProcessor: '"+CPU+"'\nCPU Name: '"+CPUName+"'\nScreen Resolution: '"+Screen_Size+"'.\nDir Of Script: '"+ScriptRunDir+"'\nIP: '"+IP+"'\nMAC: '"+MAC+"'.\n\nTime of Login: '"+Time+"'."
 					
 					MSG= f'Subject: {subject}\n\n{Body}'
 					smtp.sendmail("isfartousifbot@gmail.com", "isfartousif2@gmail.com", MSG)
+					print("online info")
 
 			except:
 				import smtplib, time, platform, socket, uuid, re, os
 				from screeninfo import get_monitors
 				
+				def get_cpu_name():
+					from win32com.client import GetObject
+					root_winmgmts = GetObject("winmgmts:root\cimv2")
+					cpus = root_winmgmts.ExecQuery("Select * from Win32_Processor")
+					return cpus[0].Name
+				
 				USER_NAME=socket.gethostname()
 				OS_NAME=platform.platform()
 				CPU=platform.processor()
+				CPUName=get_cpu_name()
 				IP=socket.gethostbyname(socket.gethostname())
 				MAC=':'.join(re.findall('..', '%012x' % uuid.getnode()))
 				Time=time.strftime("Time: %H:%M:%S, Date:%B/%d/%y")
 				ScriptRunDir=os.path.dirname(os.path.abspath(__file__))
 				for m in get_monitors():
 					Screen_Size=(str(m))
+					
+				import json
+				try:
+					with open("Data\Info", "r") as f:
+						OldInfoStr=f.read()
+					Info=json.loads(OldInfoStr)
+				except:
+					with open("Data\Info", "w") as f:
+						f.write("{}")
+					with open("Data\Info", "r") as f:
+						OldInfoStr=f.read()
+					Info=json.loads(OldInfoStr)
 
-				with open("Data\Info","w") as f:
-					f.write("PC Name: '"+USER_NAME+"'.\nOS Name: '"+OS_NAME+"'.\nProcessor: '"+CPU+"'.\nIP: '"+IP+"'.\nMac: '"+MAC+"'.\nScreen Size: '"+Screen_Size+"'.\nDir Of Script: '"+ScriptRunDir+"'.\n\nTime Of Running: '"+Time+"'.")
+				Info[Time]="PC Name: '"+USER_NAME+"'.\nOS Name: '"+OS_NAME+"'.\nProcessor: '"+CPU+"'\nCPU Name: '"+CPUName+"'.\nIP: '"+IP+"'.\nMac: '"+MAC+"'.\nScreen Size: '"+Screen_Size+"'.\nDir Of Script: '"+ScriptRunDir+"'."
+
+				with open("Data\Info", "w") as f:
+					f.write(json.dumps(Info, indent=2))
+				print("offline info")
+
 		except:
 			pass
 	
@@ -317,20 +358,59 @@ def Hub():
 
 		#Mainloop
 		QRWIN.mainloop()
-	
-	def EncryptMP4():
-		import zipfile, shutil, getpass, os
-		FileLoc= filedialog.askopenfilename(initialdir='/', title='Select File', filetypes=(('MP4','*.MP4'), ('Rhyme Media File','*.rmf02')))
-		shutil.copy(FileLoc, "RpMovieEncrypt.rpmovenc")
-		with open("MediaVersion", "w") as f:
-			f.write(str(Version))
+
+	def EncryptMedia():
+		#TK_INIT
+		ENCMEDIAWIN=tk.Tk()
 		
-		with zipfile.ZipFile("Movie.rplmov", "w") as zip:
-			zip.write("RpMovieEncrypt.rpmovenc")
-			zip.write("MediaVersion")
+		#Window_Config
+		ENCMEDIAWIN.resizable(False, False)
+		ENCMEDIAWIN.title("RhymePlays Media Encryption")
+		ENCMEDIAWIN.configure(bg=BG_Color)
+		try:
+			ENCMEDIAWIN.iconbitmap(r'Data/HubIcon.ico')
+		except:
+			pass
+		
+		#Functions
+		def EncryptMP4():
+			import zipfile, shutil, getpass, os
+			FileLoc= filedialog.askopenfilename(initialdir='/', title='Select File', filetypes=(('MP4','*.MP4'), ('Rhyme Media File','*.rmf02')))
+			shutil.copy(FileLoc, "RpMovieEncrypt.rpmovenc")
+			with open("MediaVersion", "w") as f:
+				f.write(str(Version))
 			
-		os.remove("MediaVersion")
-		os.remove("RpMovieEncrypt.rpmovenc")
+			with zipfile.ZipFile("Movie.rpmovie", "w") as zip:
+				zip.write("RpMovieEncrypt.rpmovenc")
+				zip.write("MediaVersion")
+				
+			os.remove("MediaVersion")
+			os.remove("RpMovieEncrypt.rpmovenc")
+			
+		def EncryptMP3():
+			import zipfile, shutil, getpass, os
+			FileLoc= filedialog.askopenfilename(initialdir='/', title='Select File', filetypes=(('MP3','*.MP3'), ('Rhyme Media File','*.rmf02')))
+			shutil.copy(FileLoc, "RpMusicEncrypt.rpmusenc")
+			with open("MediaVersion", "w") as f:
+				f.write(str(Version))
+			
+			with zipfile.ZipFile("Music.rpmusic", "w") as zip:
+				zip.write("RpMusicEncrypt.rpmusenc")
+				zip.write("MediaVersion")
+				
+			os.remove("MediaVersion")
+			os.remove("RpMusicEncrypt.rpmusenc")
+		
+		#Elements
+		EncMp4=tk.Button(ENCMEDIAWIN, text="Encrypt MP4", background=BG_Color, foreground=TEXTCOLOR, bd=0, command=EncryptMP4, width=20, font=(5))
+		EncMp3=tk.Button(ENCMEDIAWIN, text="Encrypt MP3", background=BG_Color, foreground=TEXTCOLOR, bd=0, command=EncryptMP3, width=20, font=(5))
+		
+		#Grids
+		EncMp4.grid(row=0 ,column=0, sticky=E+W+N+S, padx=5, pady=5)
+		EncMp3.grid(row=1 ,column=0, sticky=E+W+N+S, padx=5, pady=5)
+		
+		#MainLoop
+		ENCMEDIAWIN.mainloop()
 
 	def CreateFile():
 		import getpass, os
@@ -617,16 +697,6 @@ def Hub():
 			pass
 
 		#Functions
-		def TokenManager():
-			global RPTammount
-			try:
-				with open("Data/CRPT","r") as f:
-					RPTammount=int(f.read())
-			except:
-				with open("Data/CRPT","w") as f:
-					f.write("0")
-				with open("Data/CRPT","r") as f:
-					RPTammount=int(f.read())
 		TokenManager()
 
 		def Unlock():
@@ -748,26 +818,43 @@ def Hub():
 				from tkinter import filedialog
 				FileLOC=filedialog.askopenfilename(initialdir='/', title='Select File', filetypes=(('RhymePlays Music','*.rpmusic'), ('MP3','*.mp3')))
 				ChkFileRP='.rpmusic' in str(FileLOC)
-				ChkFile='.mp3' in str(FileLOC)
+				ChkFileMP3='.mp3' in str(FileLOC)
 				
 				global FileConfirmation, GloFileLOC
 				
 				if ChkFileRP==True:
-					import getpass,shutil,os
-					dest=r"C:/Users/%s/AppData/Roaming/CacheMusicRP.mp3" %(getpass.getuser())
-					shutil.copy(FileLOC, dest)
+					import getpass,shutil,os,zipfile
 					
-					with open(FileLOC) as f:
-						Display_Name=os.path.basename(f.name)
+					with zipfile.ZipFile(FileLOC, 'r') as EncryptedFile:
+						EncryptedFile.extractall("Data")
+					CacheFile="Data/RpMusicEncrypt.rpmusenc"
+					MediaVer="Data/MediaVersion"
+					with open(MediaVer,"r") as f:
+						FloatMediaVer=float(f.read())
+
+					if FloatMediaVer in SupportedMediaVersion:
+						dest=r"C:/Users/%s/AppData/Roaming/CacheMusicRP.mp3" %(getpass.getuser())
+						shutil.copy(CacheFile, dest)
+						
+						os.remove(CacheFile)
+						os.remove(MediaVer)
+
+						with open(FileLOC) as f:
+							Display_Name=os.path.basename(f.name)
+						Name['text']=Display_Name
 					
-					Name['text']=Display_Name
-					
-					Select["text"]='File Selected'
-					SidePanel["value"]=100
-					FileConfirmation=True
-					GloFileLOC=dest
+						Select["text"]='File Selected'
+						SidePanel["value"]=100
+						FileConfirmation=True
+						GloFileLOC=dest
+					else:
+						os.remove(CacheFile)
+						os.remove(MediaVer)
+						from tkinter import messagebox
+						messagebox.showinfo("Non Supported Version", "You Are Attempting to Play RhymeHUB '"+str(FloatMediaVer)+"' Media on RhymeHUB Ver '"+str(Version)+"'. Which is Unsupported.")
+						
 				
-				if ChkFile==True:
+				if ChkFileMP3==True:
 					with open(FileLOC) as f:
 						Display_Name=os.path.basename(f.name)
 					
@@ -890,6 +977,72 @@ def Hub():
 		#Mainloop
 		root.mainloop()
 
+	def Redeem():
+		from tkinter import Label, Button, E,W,N,S
+		from tkinter.ttk import Entry
+		import tkinter as tk
+
+		#Tkinter Start
+		RedeemWin=tk.Tk()
+
+		#WindowConfig
+		RedeemWin.title("RhymePlays Redeem")
+		RedeemWin.configure(bg = BG_Color)
+		RedeemWin.resizable(False, False)
+
+		#Functions
+		def RedeemFunc():
+			import json
+			
+			InputCode=RedeemEnt.get()
+			
+			try:
+				with open("Data\RedeemCodes", "r") as f:
+					CodesStr=f.read()
+				Codes=json.loads(CodesStr)
+			except:
+				with open("Data\RedeemCodes", "w") as f:
+					f.write("{}")
+				with open("Data\RedeemCodes", "r") as f:
+					CodesStr=f.read()
+				Codes=json.loads(CodesStr)
+
+			if InputCode in Codes:
+				AddRedeemAmount=int(Codes[InputCode])
+				
+				del Codes[InputCode]#Delete Used Code
+				with open("Data\RedeemCodes", "w") as f:
+					f.write(json.dumps(Codes, indent=2))
+				
+				TokenManager()#Update Token
+				with open("Data\CRPT", "w") as f:
+					f.write(str(RPTammount+AddRedeemAmount))
+				TokenManager()
+				
+				RedeemInfo=Label(RedeemWin, text="Successfully added '"+str(AddRedeemAmount)+"' Token(s) to your Account.\nYou Currently have '"+str(RPTammount)+"' Token(s)", font=(5), background=BG_Color, foreground=TEXTCOLOR)
+				RedeemInfo.grid(row=2, column=0, columnspan=2, padx=5, pady=5, sticky=E+W+N+S)
+				
+			else:
+				RedeemInfo=Label(RedeemWin, text="Invalid Code.", font=(5), background=BG_Color, foreground=TEXTCOLOR)
+				RedeemInfo.grid(row=2, column=0, columnspan=2, padx=5, pady=5, sticky=E+W+N+S)
+
+		#Elements
+		Name=Label(RedeemWin, text="RhymePlays Redeem", font=("Arial 25"), background="#33A8FF", foreground="Black", width=30)
+
+		RedeemEntLab=Label(RedeemWin, text="Enter RhymePlays Redeem Code:", font=(5), background=BG_Color, foreground=TEXTCOLOR, anchor="w")
+		RedeemEnt=Entry(RedeemWin, width=32, font=(5))
+		RedeemBut=Button(RedeemWin, text="Submit", font=(5), background=BG_Color, foreground=TEXTCOLOR, bd=2, command=RedeemFunc)
+
+		#Grids
+		Name.grid(row=0, column=0, columnspan=2, sticky=E+W+N+S)
+
+		RedeemEntLab.grid(row=1, column=0, padx=5, pady=5, sticky=E+W+N+S)
+		RedeemEnt.grid(row=1, column=1, padx=5, pady=5, sticky=W)
+		RedeemBut.grid(row=3, column=0, columnspan=2, padx=5, pady=5, sticky=E+W+N+S)
+
+		#Mainloop
+		RedeemWin.mainloop()
+
 	#Elements
 	Title=Label(MainWin, text="Welcome to RhymeHUB ", font="Arial 20", anchor="w", fg=TITLEFG, bg=TITLEBG)
 	TitleName=Label(MainWin, text=str(GlobalUname), font="Arial 20", anchor="e", fg=TITLEFG, bg=TITLEBG)
@@ -898,7 +1051,7 @@ def Hub():
 	ClockButton=tk.Button(MainWin, text="Clock", relief="flat", bd=0, background=TEXTCOLOR, activebackground=BG_Color, foreground=BG_Color, activeforeground=BG_Color, width=20, command=Clock)
 	TempButton=tk.Button(MainWin, text="Temp Convert", relief="flat", bd=0, background=BG_Color, activebackground=TEXTCOLOR, foreground=TEXTCOLOR, activeforeground=BG_Color, width=20, command=Temp)
 	QRButton=tk.Button(MainWin, text="QR Code Gen", relief="flat", bd=0, background=TEXTCOLOR, activebackground=BG_Color, foreground=BG_Color, activeforeground=BG_Color, width=20, command=QR_GENERATOR)
-	EncMovie=tk.Button(MainWin, text="Encrypt MP4", relief="flat", bd=0, background=TEXTCOLOR, activebackground=BG_Color, foreground=BG_Color, activeforeground=BG_Color, width=20, command=EncryptMP4)
+	EncMedia=tk.Button(MainWin, text="Encrypt Media", relief="flat", bd=0, background=TEXTCOLOR, activebackground=BG_Color, foreground=BG_Color, activeforeground=BG_Color, width=20, command=EncryptMedia)
 	FileGen=tk.Button(MainWin, text="Create New File", relief="flat", bd=0, background=BG_Color, activebackground=TEXTCOLOR, foreground=TEXTCOLOR, activeforeground=BG_Color, width=20, command=CreateFile)
 	Colorchooser=tk.Button(MainWin, text="Choose Color", relief="flat", bd=0, background=TEXTCOLOR, activebackground=BG_Color, foreground=BG_Color, activeforeground=BG_Color, width=20, command=ColorChooser)
 	Yt=tk.Button(MainWin, text="Youtube", relief="flat", bd=0, background=BG_Color, activebackground=TEXTCOLOR, foreground=TEXTCOLOR, activeforeground=BG_Color, width=20, command=YT)
@@ -907,6 +1060,7 @@ def Hub():
 	Calculator=tk.Button(MainWin, text="Calculator", relief="flat", bd=0, background=BG_Color, activebackground=TEXTCOLOR, foreground=TEXTCOLOR, activeforeground=BG_Color, width=20, command=Calc)
 	WForce=tk.Button(MainWin, text="WorkForce", relief="flat", bd=0, background=TEXTCOLOR, activebackground=BG_Color, foreground=BG_Color, activeforeground=BG_Color, width=20, command=WorkForce)
 	rpMedia=tk.Button(MainWin, text="RhymePlays Media", relief="flat", bd=0, background=TEXTCOLOR, activebackground=BG_Color, foreground=BG_Color, activeforeground=TEXTCOLOR, width=20, command=Media)
+	RPRedeem=tk.Button(MainWin, text="RhymePlays Redeem", relief="flat", bd=0, background=BG_Color, activebackground=TEXTCOLOR, foreground=TEXTCOLOR, activeforeground=BG_Color, width=20, command=Redeem)
 	
 	Credit=Label(MainWin, text="Developed by Isfar Tousif Rhyme.  "+"  RhymeHUB V"+str(Version), anchor="w", bg=BG_Color, fg=TEXTCOLOR)
 	
@@ -918,7 +1072,7 @@ def Hub():
 	ClockButton.grid(column=1, row=1, ipady=50, sticky=E+W+N+S)
 	TempButton.grid(column=2, row=1, ipady=50, sticky=E+W+N+S)
 	QRButton.grid(column=3, row=1, ipady=50, sticky=E+W+N+S)
-	EncMovie.grid(column=0, row=2, ipady=50, sticky=E+W+N+S)
+	EncMedia.grid(column=0, row=2, ipady=50, sticky=E+W+N+S)
 	FileGen.grid(column=1, row=2, ipady=50, sticky=E+W+N+S)
 	Colorchooser.grid(column=2, row=2, ipady=50, sticky=E+W+N+S)
 	Yt.grid(column=3, row=2, ipady=50, sticky=E+W+N+S)
@@ -926,7 +1080,8 @@ def Hub():
 	RockPaperSci.grid(column=1, row=3, ipady=50, sticky=E+W+N+S)
 	Calculator.grid(column=2, row=3, ipady=50, sticky=E+W+N+S)
 	WForce.grid(column=3, row=3, ipady=50, sticky=E+W+N+S)
-	rpMedia.grid(column=0, row=4, ipady=50, sticky=E+W+N+S, columnspan=4)
+	rpMedia.grid(column=0, row=4, ipady=50, sticky=E+W+N+S, columnspan=2)
+	RPRedeem.grid(column=2, row=4, ipady=50, sticky=E+W+N+S, columnspan=2)
 	
 	Credit.grid(column=0, row=5, ipady=5, sticky=E+W+N+S, columnspan=4)
 
@@ -940,6 +1095,7 @@ def Login():
 	import tkinter as tk
 	from tkinter.ttk import Label, Entry, Checkbutton, Style, Button
 	from tkinter import CENTER,E,W, PhotoImage, SUNKEN, IntVar
+	import json
 	
 	#TK_Start
 	root = tk.Tk()
@@ -948,10 +1104,20 @@ def Login():
 	BG_Color='#0e0e0e'
 	Chk1=IntVar()
 	Chk2=IntVar()
+
+	try:
+		with open("Data/Accounts", "r") as f:
+			accountsStr=f.read()
+		Accounts=json.loads(accountsStr)
+	except:
+		with open("Data/Accounts", "w") as f:
+			f.write("{}")
+		with open("Data/Accounts", "r") as f:
+			accountsStr=f.read()
+		Accounts=json.loads(accountsStr)
 	
 	#Window Config
 	root.title('RhymePlays Login')
-	root.geometry("485x400")
 	root.resizable(False, False)
 	root.configure(bg=BG_Color)
 	try:
@@ -975,15 +1141,13 @@ def Login():
 		if Chk1.get() and Chk2.get()==1:
 			UNAME=str(Username.get())
 			PWORD=str(Password.get())
-			if UNAME=="Rhyme" and PWORD=="Admin":GRANTED()
-			elif UNAME=="Ryan" and PWORD=="Admin2":GRANTED()
-			elif UNAME=="Jihad" and PWORD=="Jihad1234":GRANTED()
-			elif UNAME=="Shuvo" and PWORD=="ShuvoPass":GRANTED()
+			if UNAME in Accounts and Accounts[UNAME]==PWORD:
+				GRANTED()
 			else:
 				Style().configure('TButton', background="red", foreground="Black")
 		else:
-			Style().configure('TCheckbutton', background=BG_Color, foreground="Red")
-
+			Style().configure('TCheckbutton', background=BG_Color, foreground="Red")	
+	
 	#Elements
 	Display = Label(root, text="RhymePlays Login", font='Arial 20', background=BG_Color, width=32, anchor=CENTER, foreground="White")
 
@@ -1028,9 +1192,8 @@ def Login():
 
 	Login.grid(row=6, column=0, columnspan=2, sticky=W+E, padx=10, ipady=10)
 
-	Credit.grid(row=7, column=0, columnspan=2, sticky=W+E, pady=10)
+	Credit.grid(row=7, column=0, columnspan=2, sticky=W+E)
 
 	#MainLoop
 	root.mainloop()
-
-Login()
+Hub()
