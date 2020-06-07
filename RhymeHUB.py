@@ -30,8 +30,12 @@ def Hub():
 		TEXTCOLOR=Settings["ForegroundColor"]
 		Label(MainWin, text="Loading...", background=BG_Color, foreground=TEXTCOLOR)
 	except:
+		with open("Data/Settings","r") as f:
+			SettingsSTR=f.read()
+		Settings=json.loads(SettingsSTR)
+		Settings["BackgroundColor"]="#0e0e0e"; Settings["ForegroundColor"]="White"; Settings["WorkNote"]="No Notes"; Settings["CRPT"]=0
 		with open("Data/Settings","w") as f:
-			f.write('{"BackgroundColor":"#0e0e0e", "ForegroundColor":"White", "WorkNote":"No Notes!", "CRPT":0}') 
+			f.write(json.dumps(Settings, indent=2))
 		with open("Data/Settings","r") as f:
 			SettingsSTR=f.read()
 		Settings=json.loads(SettingsSTR)
@@ -41,8 +45,8 @@ def Hub():
 	#Variable
 	TITLEFG="#212121"
 	TITLEBG="#28A6FF"
-	Version=0.9
-	SupportedMediaVersion=[0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.8, 0.9]
+	Version=1.0
+	SupportedMediaVersion=[0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.8, 0.9, 1.0]
 	
 	#Window Config
 	MainWin.title('RhymeHUB')
@@ -68,7 +72,7 @@ def Hub():
 			Settings=json.loads(SettingSTR)
 			Settings["CRPT"]=int("0")
 			with open("Data/Settings","w") as f:
-				f.write(json.dumps(Settings))
+				f.write(json.dumps(Settings, indent=2))
 			#Reading_Again
 			with open("Data/Settings","r") as f:
 				SettingSTR=f.read()
@@ -147,24 +151,32 @@ def Hub():
 				ScriptRunDir=os.path.dirname(os.path.abspath(__file__))
 				for m in get_monitors():
 					Screen_Size=(str(m))
-					
-				import json
+				
 				try:
-					with open("Data\Info", "r") as f:
-						OldInfoStr=f.read()
-					Info=json.loads(OldInfoStr)
+					with open("Data\Settings", "r") as f:
+						SettingsSTR=f.read()
+					Settings=json.loads(SettingsSTR)
+					Info=Settings["Info"]
 				except:
-					with open("Data\Info", "w") as f:
-						f.write("{}")
-					with open("Data\Info", "r") as f:
-						OldInfoStr=f.read()
-					Info=json.loads(OldInfoStr)
+					with open("Data\Settings", "r") as f:
+						SettingsSTR=f.read()
+					Settings=json.loads(SettingsSTR)
+					Settings["Info"]={}
+					with open("Data\Settings", "w") as f:
+						f.write(json.dumps(Settings))
+					with open("Data\Settings", "r") as f:
+						SettingsSTR=f.read()
+					Settings=json.loads(SettingsSTR)
+					Info=Settings["Info"]
 
-				Info[Time]="PC Name: '"+USER_NAME+"'.\nOS Name: '"+OS_NAME+"'.\nProcessor: '"+CPU+"'\nCPU Name: '"+CPUName+"'.\nIP: '"+IP+"'.\nMac: '"+MAC+"'.\nScreen Size: '"+Screen_Size+"'.\nDir Of Script: '"+ScriptRunDir+"'."
+				Info[Time]=f"PC Name: '{USER_NAME}'. OS Name: '{OS_NAME}'. Processor: '{CPU}'CPU Name: '{CPUName}'. IP: '{IP}'.Mac: '{MAC}'. Screen Size: '{Screen_Size}'. Dir Of Script: '{ScriptRunDir}'."
 
-				with open("Data\Info", "w") as f:
-					f.write(json.dumps(Info, indent=2))
-
+				with open("Data\Settings", "r") as f:
+					SettingsSTR=f.read()
+				Settings=json.loads(SettingsSTR)
+				Settings["Info"]=Info
+				with open("Data\Settings", "w") as f:
+					f.write(json.dumps(Settings, indent=2))
 		except:
 			pass
 	
@@ -329,45 +341,246 @@ def Hub():
 		Temp.mainloop()
 
 	def QR_GENERATOR():
-		import qrcode, getpass, os
-		from tkinter import Label, Button, N,E,W,S, FLAT
-		from tkinter.ttk import Entry
-		import tkinter as tk
+		import qrcode
+		from pyzbar.pyzbar import decode
+		from PIL import Image
 
-		#Variables
-		LOC=r"C:/Users/%s/Desktop/RP_QR.png" %(getpass.getuser())
+		from PyQt5 import QtCore, QtGui, QtWidgets
+		from PyQt5.QtWidgets import QFileDialog
 
-		#Tk_Start
-		QRWIN=tk.Tk()
 
-		#Window Config
-		QRWIN.resizable(False, False)
-		QRWIN.configure(bg=BG_Color)
-		QRWIN.title("RhymePlays QR Generator")
-		try:
-			QRWIN.iconbitmap(r'Data/HubIcon.ico')
-		except:
-			pass
+		class Ui_RP_QRCode_Gen2(object):
+			def setupUi(self, RP_QRCode_Gen2):
+				RP_QRCode_Gen2.setObjectName("RP_QRCode_Gen2")
+				RP_QRCode_Gen2.resize(770, 600)
+				RP_QRCode_Gen2.setMinimumSize(QtCore.QSize(770, 600))
+				RP_QRCode_Gen2.setMaximumSize(QtCore.QSize(770, 600))
+				font = QtGui.QFont()
+				font.setPointSize(3)
+				RP_QRCode_Gen2.setFont(font)
+				RP_QRCode_Gen2.setAcceptDrops(False)
+				RP_QRCode_Gen2.setStyleSheet("background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(21, 0, 37, 255), stop:1 rgba(0, 30, 9, 255));")
+				self.centralwidget = QtWidgets.QWidget(RP_QRCode_Gen2)
+				self.centralwidget.setObjectName("centralwidget")
+				self.CreateButton = QtWidgets.QPushButton(self.centralwidget)
+				self.CreateButton.setGeometry(QtCore.QRect(10, 450, 750, 140))
+				font = QtGui.QFont()
+				font.setFamily("Montserrat")
+				font.setPointSize(36)
+				self.CreateButton.setFont(font)
+				self.CreateButton.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+				self.CreateButton.setStyleSheet("background-color: qlineargradient(spread:pad, x1:0, y1:0.199, x2:1, y2:0.665273, stop:0 rgba(0, 115, 255, 248), stop:1 rgba(171, 0, 182, 246));\n"
+		"color: white;\n"
+		"border-top-left-radius:50px;\n"
+		"border-top-right-radius:10px;\n"
+		"border-bottom-left-radius:10px;\n"
+		"border-bottom-right-radius:50px;")
+				self.CreateButton.setCheckable(False)
+				self.CreateButton.setAutoDefault(False)
+				self.CreateButton.setDefault(False)
+				self.CreateButton.setObjectName("CreateButton")
+				self.NamePlate = QtWidgets.QLabel(self.centralwidget)
+				self.NamePlate.setGeometry(QtCore.QRect(0, 0, 771, 101))
+				font = QtGui.QFont()
+				font.setFamily("Montserrat")
+				font.setPointSize(30)
+				font.setBold(False)
+				font.setItalic(False)
+				font.setWeight(50)
+				self.NamePlate.setFont(font)
+				self.NamePlate.setStyleSheet("background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(25, 129, 255, 255), stop:1 rgba(0, 189, 205, 255));\n"
+		"color: white;\n"
+		"font: 30pt \"Montserrat\";\n"
+		"border-bottom-right-radius: 20px;\n"
+		"border-bottom-left-radius: 20px;")
+				self.NamePlate.setTextFormat(QtCore.Qt.AutoText)
+				self.NamePlate.setAlignment(QtCore.Qt.AlignCenter)
+				self.NamePlate.setObjectName("NamePlate")
+				self.TextInput = QtWidgets.QPlainTextEdit(self.centralwidget)
+				self.TextInput.setGeometry(QtCore.QRect(30, 270, 710, 160))
+				font = QtGui.QFont()
+				font.setFamily("Montserrat")
+				font.setPointSize(22)
+				self.TextInput.setFont(font)
+				self.TextInput.setStyleSheet("background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(225, 255, 255, 255), stop:1 rgba(255, 241, 255, 255));\n"
+		"border-radius: 10px;")
+				self.TextInput.setObjectName("TextInput")
+				self.QRViewR = QtWidgets.QLabel(self.centralwidget)
+				self.QRViewR.setEnabled(True)
+				self.QRViewR.setGeometry(QtCore.QRect(30, 115, 140, 140))
+				self.QRViewR.setCursor(QtGui.QCursor(QtCore.Qt.CrossCursor))
+				self.QRViewR.setStyleSheet("background-color:qradialgradient(spread:pad, cx:0.5, cy:0.5, radius:0.5, fx:0.495, fy:0.499682, stop:0 rgba(164, 223, 111, 255), stop:1 rgba(194, 228, 221, 255));\n"
+		"border-radius:10px")
+				self.QRViewR.setScaledContents(True)
+				self.QRViewR.setFrameShadow(QtWidgets.QFrame.Plain)
+				self.QRViewR.setObjectName("QRViewR")
+				self.VersionSpinBox = QtWidgets.QSpinBox(self.centralwidget)
+				self.VersionSpinBox.setGeometry(QtCore.QRect(280, 115, 81, 41))
+				font = QtGui.QFont()
+				font.setFamily("Montserrat")
+				font.setPointSize(24)
+				self.VersionSpinBox.setFont(font)
+				self.VersionSpinBox.setStyleSheet("background-color:qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(93, 57, 255, 255), stop:1 rgba(153, 14, 196, 255));\n"
+		"border-top-left-radius:8px;\n"
+		"border-top-right-radius:8px;\n"
+		"border-bottom-left-radius:8px;\n"
+		"border-bottom-right-radius:1px;\n"
+		"color:white;")
+				self.VersionSpinBox.setMinimum(1)
+				self.VersionSpinBox.setMaximum(40)
+				self.VersionSpinBox.setObjectName("VersionSpinBox")
+				self.VersionLabel = QtWidgets.QLabel(self.centralwidget)
+				self.VersionLabel.setGeometry(QtCore.QRect(180, 115, 91, 41))
+				font = QtGui.QFont()
+				font.setFamily("Montserrat")
+				font.setPointSize(14)
+				self.VersionLabel.setFont(font)
+				self.VersionLabel.setStyleSheet("background-color:qlineargradient(spread:pad, x1:0, y1:0, x2:0.966, y2:1, stop:0.232955 rgba(138, 41, 187, 255), stop:1 rgba(54, 146, 254, 255));\n"
+		"border-radius:5px;\n"
+		"color:white;")
+				self.VersionLabel.setAlignment(QtCore.Qt.AlignCenter)
+				self.VersionLabel.setObjectName("VersionLabel")
+				self.ImageSizeSpinBox = QtWidgets.QSpinBox(self.centralwidget)
+				self.ImageSizeSpinBox.setGeometry(QtCore.QRect(280, 165, 81, 41))
+				font = QtGui.QFont()
+				font.setFamily("Montserrat")
+				font.setPointSize(24)
+				self.ImageSizeSpinBox.setFont(font)
+				self.ImageSizeSpinBox.setStyleSheet("background-color:qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(93, 57, 255, 255), stop:1 rgba(153, 14, 196, 255));\n"
+		"border-top-left-radius:8px;\n"
+		"border-top-right-radius:8px;\n"
+		"border-bottom-left-radius:8px;\n"
+		"border-bottom-right-radius:1px;\n"
+		"color:white;")
+				self.ImageSizeSpinBox.setMinimum(1)
+				self.ImageSizeSpinBox.setMaximum(50)
+				self.ImageSizeSpinBox.setProperty("value", 10)
+				self.ImageSizeSpinBox.setObjectName("ImageSizeSpinBox")
+				self.ImageSizeLabel = QtWidgets.QLabel(self.centralwidget)
+				self.ImageSizeLabel.setGeometry(QtCore.QRect(180, 165, 91, 41))
+				font = QtGui.QFont()
+				font.setFamily("Montserrat")
+				font.setPointSize(12)
+				self.ImageSizeLabel.setFont(font)
+				self.ImageSizeLabel.setStyleSheet("background-color:qlineargradient(spread:pad, x1:0, y1:0, x2:0.966, y2:1, stop:0.232955 rgba(138, 41, 187, 255), stop:1 rgba(54, 146, 254, 255));\n"
+		"border-radius:5px;\n"
+		"color:white;")
+				self.ImageSizeLabel.setAlignment(QtCore.Qt.AlignCenter)
+				self.ImageSizeLabel.setObjectName("ImageSizeLabel")
+				self.BorderLabel = QtWidgets.QLabel(self.centralwidget)
+				self.BorderLabel.setGeometry(QtCore.QRect(180, 215, 91, 41))
+				font = QtGui.QFont()
+				font.setFamily("Montserrat")
+				font.setPointSize(14)
+				self.BorderLabel.setFont(font)
+				self.BorderLabel.setStyleSheet("background-color:qlineargradient(spread:pad, x1:0, y1:0, x2:0.966, y2:1, stop:0.232955 rgba(138, 41, 187, 255), stop:1 rgba(54, 146, 254, 255));\n"
+		"border-radius:5px;\n"
+		"color:white;")
+				self.BorderLabel.setAlignment(QtCore.Qt.AlignCenter)
+				self.BorderLabel.setObjectName("BorderLabel")
+				self.BorderSpinBox = QtWidgets.QSpinBox(self.centralwidget)
+				self.BorderSpinBox.setGeometry(QtCore.QRect(280, 215, 81, 41))
+				font = QtGui.QFont()
+				font.setFamily("Montserrat")
+				font.setPointSize(24)
+				self.BorderSpinBox.setFont(font)
+				self.BorderSpinBox.setStyleSheet("background-color:qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(93, 57, 255, 255), stop:1 rgba(153, 14, 196, 255));\n"
+		"border-top-left-radius:8px;\n"
+		"border-top-right-radius:8px;\n"
+		"border-bottom-left-radius:8px;\n"
+		"border-bottom-right-radius:1px;\n"
+		"color:white;")
+				self.BorderSpinBox.setMinimum(0)
+				self.BorderSpinBox.setMaximum(100)
+				self.BorderSpinBox.setProperty("value", 5)
+				self.BorderSpinBox.setObjectName("BorderSpinBox")
+				self.Saperator = QtWidgets.QLabel(self.centralwidget)
+				self.Saperator.setGeometry(QtCore.QRect(376, 115, 5, 140))
+				self.Saperator.setStyleSheet("background-color:white;")
+				self.Saperator.setText("")
+				self.Saperator.setObjectName("Saperator")
+				self.ReadQRButton = QtWidgets.QPushButton(self.centralwidget)
+				self.ReadQRButton.setGeometry(QtCore.QRect(390, 135, 100, 100))
+				font = QtGui.QFont()
+				font.setFamily("Montserrat")
+				font.setPointSize(13)
+				self.ReadQRButton.setFont(font)
+				self.ReadQRButton.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+				self.ReadQRButton.setStyleSheet("background-color:qlineargradient(spread:pad, x1:0, y1:0, x2:0.966, y2:1, stop:0.232955 rgba(138, 41, 187, 255), stop:1 rgba(54, 146, 254, 255));\n"
+		"border-radius:5px;\n"
+		"color:white;")
+				self.ReadQRButton.setObjectName("ReadQRButton")
+				self.ReadQRText = QtWidgets.QLabel(self.centralwidget)
+				self.ReadQRText.setGeometry(QtCore.QRect(500, 115, 241, 141))
+				font = QtGui.QFont()
+				font.setFamily("Montserrat")
+				font.setPointSize(13)
+				self.ReadQRText.setFont(font)
+				self.ReadQRText.setWordWrap(True)
+				self.ReadQRText.setStyleSheet("background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(225, 255, 255, 255), stop:1 rgba(255, 241, 255, 255));\n"
+		"border-radius: 10px;")
+				self.ReadQRText.setAlignment(QtCore.Qt.AlignCenter)
+				self.ReadQRText.setObjectName("ReadQRText")
+				RP_QRCode_Gen2.setCentralWidget(self.centralwidget)
 
-		#Functions
-		def GEN():
-			TEXT=str(Entry.get())
-			QR=qrcode.make(TEXT)
-			QR.save(LOC)
-			os.system(LOC)
+				self.retranslateUi(RP_QRCode_Gen2)
+				QtCore.QMetaObject.connectSlotsByName(RP_QRCode_Gen2)
 
-		#Elements
-		Name=Label(QRWIN, text="RhymePlays QR Code Generator.", bg=BG_Color, fg=TEXTCOLOR, font="Arial 20")
-		Entry=Entry(QRWIN, font=("10"))
-		Generate=Button(QRWIN, text="Generate!", bg=BG_Color, fg=TEXTCOLOR, font=(20), command=GEN, relief=FLAT, bd=0, activebackground=TEXTCOLOR, activeforeground=BG_Color)
+				#OnClick
+				self.CreateButton.pressed.connect(self.GenerateClicked)
+				self.ReadQRButton.pressed.connect(self.ReadClicked)
 
-		#Grid
-		Name.grid(row=0, column=0, columnspan=2, pady=5, padx=5)
-		Entry.grid(row=1, column=0, sticky=N+S+E+W, padx=5, pady=5)
-		Generate.grid(row=1, column=1, sticky=N+S+E+W, padx=5, pady=5)
+			def retranslateUi(self, RP_QRCode_Gen2):
+				_translate = QtCore.QCoreApplication.translate
+				RP_QRCode_Gen2.setWindowTitle(_translate("RP_QRCode_Gen2", "RhymePlays QR Code Generator 2"))
+				RP_QRCode_Gen2.setWindowIcon(QtGui.QIcon("Data\Icon.ico"))
+				self.CreateButton.setText(_translate("RP_QRCode_Gen2", "Create!"))
+				self.NamePlate.setText(_translate("RP_QRCode_Gen2", "RhymePlays QR Code Generator"))
+				self.VersionLabel.setText(_translate("RP_QRCode_Gen2", "Version"))
+				self.ImageSizeLabel.setText(_translate("RP_QRCode_Gen2", "Image Size"))
+				self.BorderLabel.setText(_translate("RP_QRCode_Gen2", "Border"))
+				self.ReadQRButton.setText(_translate("RP_QRCode_Gen2", "Read Code\n"
+		"Select File"))
+				self.ReadQRText.setText(_translate("RP_QRCode_Gen2", "QR Code Info is Shown Here"))
 
-		#Mainloop
-		QRWIN.mainloop()
+			#Functions
+			def GenerateClicked(self):
+				VersionINT=self.VersionSpinBox.value()
+				BoxSizeINT=self.ImageSizeSpinBox.value()
+				BorderINT=self.BorderSpinBox.value()
+				Text=str(self.TextInput.toPlainText())
+
+				SaveLoc=QFileDialog.getSaveFileName(filter="Image (*.png)", directory="RhymeQRFile")[0]
+
+				if SaveLoc != "":
+					qr=qrcode.QRCode(
+						version=VersionINT,
+						box_size=BoxSizeINT,
+						border=BorderINT
+					)
+					qr.add_data(Text)
+					qr.make(fit=True)
+					image=qr.make_image(fill="Black", back_color="White")
+					image.save(SaveLoc)
+					self.QRViewR.setPixmap(QtGui.QPixmap(SaveLoc))
+
+			def ReadClicked(self):
+				ImageFileLoc=QFileDialog.getOpenFileName(filter="Images (*.png *.jpeg *.jpg)")[0]
+				if ImageFileLoc != "":
+					try:
+						DecodedText=decode(Image.open(ImageFileLoc))
+						self.ReadQRText.setText(DecodedText[0][0].decode("ascii"))
+						self.QRViewR.setPixmap(QtGui.QPixmap(ImageFileLoc))
+					except: self.ReadQRText.setText("<h1 style='color:red'><u>Cannot Read File!</u><h1>")
+
+		if __name__ == "__main__":
+			import sys
+			app = QtWidgets.QApplication(sys.argv)
+			RP_QRCode_Gen2 = QtWidgets.QMainWindow()
+			ui = Ui_RP_QRCode_Gen2()
+			ui.setupUi(RP_QRCode_Gen2)
+			RP_QRCode_Gen2.show()
+			sys.exit(app.exec_())
 
 	def EncryptMedia():
 		#TK_INIT
@@ -661,7 +874,7 @@ def Hub():
 
 		#Functions
 		def NOTE():
-			with open("Data/Settings") as f:
+			with open("Data/Settings", "r") as f:
 				SettingsSTR=f.read()
 			Settings=json.loads(SettingsSTR)
 			NoteString=str(Settings["WorkNote"])
@@ -721,7 +934,7 @@ def Hub():
 					Settings=json.loads(SettingsSTR)
 					Settings["CRPT"]=int(RPTammount-2)
 					with open("Data/Settings","w") as f:
-						f.write(json.dumps(Settings))
+						f.write(json.dumps(Settings, indent=2))
 
 					TokenManager()
 					
@@ -743,7 +956,7 @@ def Hub():
 					Settings=json.loads(SettingsSTR)
 					Settings["CRPT"]=int(RPTammount-1)
 					with open("Data/Settings","w") as f:
-						f.write(json.dumps(Settings))
+						f.write(json.dumps(Settings, indent=2))
 					
 					FolderDir=os.path.dirname(os.path.abspath(FileLoc))
 					with open(FileLoc) as f:
@@ -885,19 +1098,18 @@ def Hub():
 
 			def PLAY():
 				if FileConfirmation==True:
-					print('Playing '+GloFileLOC)
 					mixer.init()
 					mixer.music.load(GloFileLOC)
 					mixer.music.play()
 				else:
-					print('No File(s) Selected')
+					pass
 
 			def STOP():
 				if FileConfirmation==True:
 					mixer.music.stop()
 					mixer.quit()
 				else:
-					print('No File(s) Selected')
+					pass
 
 			def VOLUME(val):
 				volume=Volume.get()
@@ -963,7 +1175,7 @@ def Hub():
 			Settings=json.loads(SettingsSTR)
 			Settings["Request"]=str(RequestedList.get())
 			with open("Data/Settings","w") as f:
-				f.write(json.dumps(Settings))
+				f.write(json.dumps(Settings, indent=2))
 		
 		#Elements
 		Title=Label(root, text="RhymePlays Media", width=20, font="Arial 20", anchor="w", fg=TITLEFG, bg=TITLEBG)
@@ -1014,24 +1226,31 @@ def Hub():
 			import json
 			
 			InputCode=RedeemEnt.get()
-			
+
 			try:
-				with open("Data\RedeemCodes", "r") as f:
-					CodesStr=f.read()
-				Codes=json.loads(CodesStr)
+				with open("Data\Settings", "r") as f:
+					SettingsSTR=f.read()
+				Settings=json.loads(SettingsSTR)
+				Codes=Settings["RedeemCodes"]
 			except:
-				with open("Data\RedeemCodes", "w") as f:
-					f.write("{}")
-				with open("Data\RedeemCodes", "r") as f:
-					CodesStr=f.read()
-				Codes=json.loads(CodesStr)
+				with open("Data\Settings", "r") as f:
+					SettingsSTR=f.read()
+				Settings=json.loads(SettingsSTR)
+				Settings["RedeemCodes"]={}
+				with open("Data\Settings", "w") as f:
+					f.write(json.dumps(Settings, indent=2))
+				with open("Data\Settings", "r") as f:
+					SettingsSTR=f.read()
+				Settings=json.loads(SettingsSTR)
+				Codes=Settings["RedeemCodes"]
 
 			if InputCode in Codes:
 				AddRedeemAmount=int(Codes[InputCode])
 				
 				del Codes[InputCode]#Delete Used Code
-				with open("Data\RedeemCodes", "w") as f:
-					f.write(json.dumps(Codes, indent=2))
+				Settings["RedeemCodes"]=Codes
+				with open("Data\Settings", "w") as f:
+					f.write(json.dumps(Settings, indent=2))
 				
 				TokenManager()#Update Token
 				with open("Data/Settings","r") as f:
@@ -1039,7 +1258,7 @@ def Hub():
 				Settings=json.loads(SettingsSTR)
 				Settings["CRPT"]=int(RPTammount+AddRedeemAmount)
 				with open("Data/Settings","w") as f:
-					f.write(json.dumps(Settings))
+					f.write(json.dumps(Settings, indent=2))
 				TokenManager()
 				
 				RedeemInfo=Label(RedeemWin, text="Successfully added '"+str(AddRedeemAmount)+"' Token(s) to your Account.\nYou Currently have '"+str(RPTammount)+"' Token(s)", font=(5), background=BG_Color, foreground=TEXTCOLOR)
@@ -1048,7 +1267,7 @@ def Hub():
 			else:
 				RedeemInfo=Label(RedeemWin, text="Invalid Code.", font=(5), background=BG_Color, foreground=TEXTCOLOR)
 				RedeemInfo.grid(row=2, column=0, columnspan=2, padx=5, pady=5, sticky=E+W+N+S)
-
+			
 		#Elements
 		Name=Label(RedeemWin, text="RhymePlays Redeem", font=("Arial 25"), background="#33A8FF", foreground="Black", width=30)
 
@@ -1320,7 +1539,7 @@ def Hub():
 					#KeyPresses
 					turtle.onkey(up, "Up")
 					turtle.onkey(down, "Down")
-					turtle.onkey(lambda: print(f"{Player.xcor()} {Player.ycor()}"), "`")
+					#turtle.onkey(lambda: print(f"{Player.xcor()} {Player.ycor()}"), "`")
 					turtle.onkey(Restart, " ")
 			playerOBJ()
 
@@ -1328,6 +1547,192 @@ def Hub():
 			GameWindow.mainloop()
 		except:
 			pass
+
+	def RPEventFunc():
+		import tkinter as tk
+		from tkinter import Button, Label, E,W,N,S, Listbox, Y
+		from tkinter.ttk import Entry, Combobox, Spinbox, Scrollbar
+		import time, json
+
+		try:
+			#Read EventSheet
+			with open("Data/Settings", 'r') as f:
+				SettingsSTR=f.read()
+			Settings=json.loads(SettingsSTR)
+			UserEvents=Settings["UserEvents"]
+		except:
+			#Write EventSheet
+			with open("Data/Settings", 'r') as f:
+				SettingsSTR=f.read()
+			Settings=json.loads(SettingsSTR)
+			Settings["UserEvents"]={"EventSystem Birthday":{"MonthDay":4, "Month":5, "Year":2020}}
+			with open("Data/Settings", 'w') as f:
+				f.write(json.dumps(Settings, indent=2))
+			#Read EventSheet
+			with open("Data/Settings", 'r') as f:
+				SettingsSTR=f.read()
+			Settings=json.loads(SettingsSTR)
+			UserEvents=Settings["UserEvents"]
+
+		#Start_TK
+		EventWindow=tk.Tk()
+
+		#Variables
+		EventsList=[]
+
+		#WindowConfig
+		EventWindow.title("RhymePlays Event")
+		EventWindow.resizable(False, False)
+		EventWindow.configure(bg=BG_Color)
+		try:
+			EventWindow.iconbitmap("Data/icon.ico")
+		except:
+			pass
+
+		#Functions
+		def updateTime(Format):
+			CurrentYear=time.localtime()[0]
+			CurrentMonth=time.localtime()[1]
+			CurrentMonthDay=time.localtime()[2]
+			CurrentHour=time.localtime()[3]
+			CurrentMinute=time.localtime()[4]
+			CurrentSecond=time.localtime()[5]
+			CurrentWeekDayRAW=time.strftime("%a")
+			CurrentYearDay=time.localtime()[7]
+			#WeekDayRawParse
+			if CurrentWeekDayRAW=="Sat": CurrentWeekDay=1
+			elif CurrentWeekDayRAW=="Sun": CurrentWeekDay=2
+			elif CurrentWeekDayRAW=="Mon": CurrentWeekDay=3
+			elif CurrentWeekDayRAW=="Tue": CurrentWeekDay=4
+			elif CurrentWeekDayRAW=="Wed": CurrentWeekDay=5
+			elif CurrentWeekDayRAW=="Thu": CurrentWeekDay=6
+			elif CurrentWeekDayRAW=="Fri": CurrentWeekDay=7
+			else: pass
+			#print(f"Year:{CurrentYear} / Month:{CurrentMonth} / Day:{CurrentMonthDay}\nHour:{CurrentHour} / Minute:{CurrentMinute} / Second:{CurrentSecond}\nWeekDay:{CurrentWeekDay} / YearDay:{CurrentYearDay}")
+
+			if Format=="strMonth":
+				if CurrentMonth==1: return "January"
+				if CurrentMonth==2: return "February"
+				if CurrentMonth==3: return "March"
+				if CurrentMonth==4: return "April"
+				if CurrentMonth==5: return "May"
+				if CurrentMonth==6: return "June"
+				if CurrentMonth==7: return "July"
+				if CurrentMonth==8: return "August"
+				if CurrentMonth==9: return "September"
+				if CurrentMonth==10: return "October"
+				if CurrentMonth==11: return "November"
+				if CurrentMonth==12: return "December"
+
+			if Format=="strWeekDay":
+				if CurrentWeekDay==1: return "Saturday"
+				if CurrentWeekDay==2: return "Sunday"
+				if CurrentWeekDay==3: return "Monday"
+				if CurrentWeekDay==4: return "Tuesday"
+				if CurrentWeekDay==5: return "Wednesday"
+				if CurrentWeekDay==6: return "Thursday"
+				if CurrentWeekDay==7: return "Friday"
+
+			if Format=="int":
+				return [CurrentYear, CurrentMonth, CurrentMonthDay, CurrentHour, CurrentMinute, CurrentSecond, CurrentWeekDay, CurrentYearDay]
+
+		def UserEventParser():
+			for Events in UserEvents:
+				EventYear=UserEvents[Events]["Year"]
+				EventMonth=UserEvents[Events]["Month"]
+				EventMonthDay=UserEvents[Events]["MonthDay"]
+				if updateTime("int")[0]==EventYear and updateTime("int")[1]==EventMonth and updateTime("int")[2]==EventMonthDay:
+					EventsList.append(Events)
+		UserEventParser()
+
+		def AddUserEvent(EventName ,Year, Month, Day):
+			with open("Data/Settings", 'r') as f:
+				SettingsSTR=f.read()
+			Settings=json.loads(SettingsSTR)
+			UserEvents=Settings["UserEvents"]
+			UserEvents[EventName]={"MonthDay":Day, "Month":Month, "Year":Year}
+			with open("Data/Settings", 'w') as f:
+				f.write(json.dumps(Settings, indent=2))
+			EventWindow.destroy()
+			RPEventFunc()
+			#UserEventParser()
+
+		def RemoveUserEvent(EventName):
+			with open("Data/Settings", 'r') as f:
+				SettingsSTR=f.read()
+			Settings=json.loads(SettingsSTR)
+			UserEvents=Settings["UserEvents"]
+			del UserEvents[EventName]
+			with open("Data/Settings", 'w') as f:
+				f.write(json.dumps(Settings, indent=2))
+			EventWindow.destroy()
+			RPEventFunc()
+			#UserEventParser()
+
+		#TkinterFuncConv
+		def REMOVE():
+			if RemoveEventName.get()!="":
+				RemoveUserEvent(RemoveEventName.get())
+				try:EventsList.remove(RemoveEventName.get())
+				except:pass
+				RemoveEventName["value"]=UserEventParser()
+
+		def ADD():
+			if AddEventName.get() not in ["", "EventName"]:
+				if AddEventMonth.get()=="January": IntMonth=1
+				if AddEventMonth.get()=="February": IntMonth=2
+				if AddEventMonth.get()=="March": IntMonth=3
+				if AddEventMonth.get()=="April": IntMonth=4
+				if AddEventMonth.get()=="May": IntMonth=5
+				if AddEventMonth.get()=="June": IntMonth=6
+				if AddEventMonth.get()=="July": IntMonth=7
+				if AddEventMonth.get()=="August": IntMonth=8
+				if AddEventMonth.get()=="August": IntMonth=9
+				if AddEventMonth.get()=="October": IntMonth=10
+				if AddEventMonth.get()=="November": IntMonth=11
+				if AddEventMonth.get()=="December": IntMonth=12
+				AddUserEvent(AddEventName.get(), int(AddEventYear.get()), IntMonth, int(AddEventDay.get()))
+
+		def UserEventLister():
+			AllEvents=[]
+			for Events in UserEvents:
+				AllEvents.append(Events)
+			return AllEvents
+
+		def EventText():
+			itemIndex=0
+			for items in EventsList:
+				EventListView.insert(itemIndex, items)
+				itemIndex=itemIndex+1
+
+		#Elements
+		Title=Label(EventWindow, text="RhymePlays Events", background=TEXTCOLOR, foreground=BG_Color, font=("Arial", 30))
+		EventListView=Listbox(EventWindow, width=25, background=BG_Color, foreground=TEXTCOLOR, font=("Arial", 15));EventText()
+
+		AddEventName=Entry(EventWindow);AddEventName.insert(0, 'EventName');AddEventName.bind("<FocusIn>", lambda args: AddEventName.delete('0', 'end'))
+		AddEventYear=Spinbox(EventWindow, width=10, font=("Arial", 15), from_=int(updateTime("int")[0]), to=updateTime("int")[0]+1000);AddEventYear.insert(0, int(updateTime("int")[0]))
+		AddEventMonth=Combobox(EventWindow, width=10, value=["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"], font=("Arial", 15));AddEventMonth.current(int(updateTime("int")[1]-1))
+		AddEventDay=Combobox(EventWindow, width=10, value=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31], font=("Arial", 15));AddEventDay.current(int(updateTime("int")[2]-1))
+		AddEventButton=Button(EventWindow, text="Add Event", command=ADD, bd=0, background=TEXTCOLOR, foreground=BG_Color)
+
+		RemoveEventName=Combobox(EventWindow, width=10, value=UserEventLister(), font=("Arial", 10))
+		RemoveEventButton=Button(EventWindow, width=10, text="Remove Event", command=REMOVE, bd=0, background=TEXTCOLOR, foreground=BG_Color)
+
+		#Grid
+		Title.grid(row=0, column=0, columnspan=4, sticky=E+W+N+S)
+		EventListView.grid(row=1, column=2, rowspan=5, sticky=E+W+N+S, pady=(10,10), padx=(10, 10))
+
+		AddEventName.grid(row=1, column=0, sticky=E+W+N+S, pady=(10,10), padx=(10, 0))
+		AddEventYear.grid(row=2, column=0, sticky=E+W+N+S, pady=(0,10), padx=(10, 0))
+		AddEventMonth.grid(row=3, column=0, sticky=E+W+N+S, pady=(0,10), padx=(10, 0))
+		AddEventDay.grid(row=4, column=0, sticky=E+W+N+S, pady=(0,10), padx=(10, 0))
+		AddEventButton.grid(row=5, column=0, sticky=E+W+N+S, pady=(0,10), padx=(10, 0))
+
+		RemoveEventName.grid(row=1, column=1, rowspan=3, sticky=E+W+N+S, pady=(10,10), padx=(10, 0))
+		RemoveEventButton.grid(row=4, column=1, rowspan=2,  sticky=E+W+N+S, pady=(0,10), padx=(10, 0))
+
+		#MainLoop
+		EventWindow.mainloop()
 
 	#Elements
 	Title=Label(MainWin, text="Welcome to RhymeHUB ", font="Arial 20", anchor="w", fg=TITLEFG, bg=TITLEBG)
@@ -1345,10 +1750,11 @@ def Hub():
 	RockPaperSci=tk.Button(MainWin, text="Rock Paper Scissors", relief="flat", bd=0, background=TEXTCOLOR, activebackground=BG_Color, foreground=BG_Color, activeforeground=BG_Color, width=20, command=RockPaperScissors)
 	Calculator=tk.Button(MainWin, text="Calculator", relief="flat", bd=0, background=BG_Color, activebackground=TEXTCOLOR, foreground=TEXTCOLOR, activeforeground=BG_Color, width=20, command=Calc)
 	WForce=tk.Button(MainWin, text="WorkForce", relief="flat", bd=0, background=TEXTCOLOR, activebackground=BG_Color, foreground=BG_Color, activeforeground=BG_Color, width=20, command=WorkForce)
-	rpMedia=tk.Button(MainWin, text="RhymePlays Media", relief="flat", bd=0, background=TEXTCOLOR, activebackground=BG_Color, foreground=BG_Color, activeforeground=TEXTCOLOR, width=20, command=Media)
+	RPEvent=tk.Button(MainWin, text="RhymePlaysEvents", relief="flat", bd=0, background=TEXTCOLOR, activebackground=BG_Color, foreground=BG_Color, activeforeground=TEXTCOLOR, width=20, command=RPEventFunc)	
 	RPRedeem=tk.Button(MainWin, text="RhymePlays Redeem", relief="flat", bd=0, background=BG_Color, activebackground=TEXTCOLOR, foreground=TEXTCOLOR, activeforeground=BG_Color, width=20, command=Redeem)
 	RPTTT=tk.Button(MainWin, text="Tic Tac Toe", relief="flat", bd=0, background=TEXTCOLOR, activebackground=BG_Color, foreground=BG_Color, activeforeground=TEXTCOLOR, width=20, command=TTT)
 	RPDodge=tk.Button(MainWin, text="RhymeDodge", relief="flat", bd=0, background=BG_Color, activebackground=TEXTCOLOR, foreground=TEXTCOLOR, activeforeground=BG_Color, width=20, command=RhymeDodgeGame)
+	rpMedia=tk.Button(MainWin, text="RhymePlays Media", relief="flat", bd=0, background=BG_Color, activebackground=TEXTCOLOR, foreground=TEXTCOLOR, activeforeground=BG_Color, width=20, command=Media)
 
 	Credit=Label(MainWin, text="Developed by Isfar Tousif Rhyme.  "+"  RhymeHUB V"+str(Version), anchor="w", bg=BG_Color, fg=TEXTCOLOR)
 	
@@ -1368,12 +1774,13 @@ def Hub():
 	RockPaperSci.grid(column=1, row=3, ipady=50, sticky=E+W+N+S)
 	Calculator.grid(column=2, row=3, ipady=50, sticky=E+W+N+S)
 	WForce.grid(column=3, row=3, ipady=50, sticky=E+W+N+S)
-	rpMedia.grid(column=0, row=4, ipady=50, sticky=E+W+N+S)
+	RPEvent.grid(column=0, row=4, ipady=50, sticky=E+W+N+S)
 	RPRedeem.grid(column=1, row=4, ipady=50, sticky=E+W+N+S)
 	RPTTT.grid(column=2, row=4, ipady=50, sticky=E+W+N+S)
 	RPDodge.grid(column=3, row=4, ipady=50, sticky=E+W+N+S)
+	rpMedia.grid(column=0, row=5, ipady=50, columnspan=4, sticky=E+W+N+S)
 	
-	Credit.grid(column=0, row=5, ipady=5, sticky=E+W+N+S, columnspan=4)
+	Credit.grid(column=0, row=6, ipady=5, sticky=E+W+N+S, columnspan=5)
 
 	#Mainloop
 	ChkUpdate()
@@ -1396,8 +1803,20 @@ def Login():
 	Chk2=IntVar()
 
 	try:
+		try:
+			with open("Data/Settings", "r") as f:
+				SettingsSTR=f.read()
+			Settings=json.loads(SettingsSTR)
+			AccountsLinkURL=Settings["OnlineAccountsFetchLink"]
+		except:
+			with open("Data/Settings", "w") as f:
+				f.write('{"OnlineAccountsFetchLink":"https://drive.google.com/uc?id=11yvz1e8rtmzbQOWn34kXql3Zc5R7tmEM"}')
+			with open("Data/Settings", "r") as f:
+				SettingsSTR=f.read()
+			Settings=json.loads(SettingsSTR)
+			AccountsLinkURL=Settings["OnlineAccountsFetchLink"]
+
 		import requests
-		AccountsLinkURL="https://drive.google.com/uc?id=11yvz1e8rtmzbQOWn34kXql3Zc5R7tmEM"
 		AccountsLinkReq=requests.get(AccountsLinkURL)
 		AccountsLinkStr=str(AccountsLinkReq.text)
 		#Get_Accounts
@@ -1407,15 +1826,18 @@ def Login():
 		Accounts=json.loads(AccountsStr)
 	except:
 		try:
-			with open("Data/Accounts", "r") as f:
-				accountsStr=f.read()
-			Accounts=json.loads(accountsStr)
+			with open("Data/Settings","r") as f:
+				SettingsSTR=f.read()
+			Settings=json.loads(SettingsSTR)
+			Accounts=Settings["Accounts"]
 		except:
-			with open("Data/Accounts", "w") as f:
-				f.write("{}")
-			with open("Data/Accounts", "r") as f:
-				accountsStr=f.read()
-			Accounts=json.loads(accountsStr)
+			with open("Data/Settings", "w") as f:
+				f.write('{"Accounts":{"Rhyme":"Admin"}, "OnlineAccountsFetchLink":"https://drive.google.com/uc?id=11yvz1e8rtmzbQOWn34kXql3Zc5R7tmEM"}')
+			#Read
+			with open("Data/Settings","r") as f:
+				SettingsSTR=f.read()
+			Settings=json.loads(SettingsSTR)
+			Accounts=Settings["Accounts"]
 	
 	#Window Config
 	root.title('RhymePlays Login')
